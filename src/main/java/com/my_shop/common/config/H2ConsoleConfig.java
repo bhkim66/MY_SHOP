@@ -1,4 +1,4 @@
-package com.my_shop.config;
+package com.my_shop.common.config;
 
 import org.h2.server.web.JakartaWebServlet;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
