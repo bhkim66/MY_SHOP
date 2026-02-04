@@ -49,3 +49,9 @@ MY_SHOP은 개발 지식 없이도
 - product-domain
 - order-domain
 - settlement-domain
+
+## 🤖 자동화
+### AI 코드 리뷰 봇
+- Pull Request 생성 시 자동으로 AI 기반 코드 리뷰 실행
+- Anthropic Claude API를 활용한 코드 품질 검토
+- GitHub Actions를 통한 자동화 워크플로우
