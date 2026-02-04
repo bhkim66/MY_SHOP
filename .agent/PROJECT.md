@@ -14,6 +14,9 @@
     - 🔐 사용자 인증 및 권한 관리
     - 💻 AI 기반의 마켓 설명 서비스 제공
 
+- **상세 요구사항 문서**: [REQUIREMENTS.md](file:///Users/bh/project/MY_SHOP/.agent/REQUIREMENTS.md)
+
+
 ## 2. 기술 스택
 - **BackEnd**: Spring Boot 3.x (Java 21)
 - **FrontEnd**: React.js, Nginx
@@ -57,16 +60,28 @@
     - `utils`: 프로젝트 전반에서 사용되는 공통 유틸리티
 
 - **`com.my_shop.{domain}` (Business Domain Packages)**:
-    - `member`: 사용자 관리 (가입, 프로필, 권한)
-    - `product`: 상품 관리 (카테고리, 옵션, 재고)
-    - `order`: 주문 프로세스 (장바구니, 주문, 배송)
-    - `payment`: 결제 처리 (승인, 취소, 환불)
+    프로젝트는 비즈니스 응집도를 높이기 위해 다음 11개 이상의 도메인으로 세분화됩니다.
+    
+    1. **`member` (회원)**: 사용자 관리, 인증(Auth), 주소지 관리 (`USER`, `USER_ADDRESSES`)
+    2. **`market` (마켓)**: 마켓 정보, 설정, 사업자 관리 (`MARKETS`, `MARKET_SETTINGS`)
+    3. **`product` (상품)**: 상품 카탈로그, 옵션, 재고, 카테고리 (`PRODUCTS`, `CATEGORIES`)
+    4. **`order` (주문)**: 장바구니, 위시리스트, 주문 처리 (`ORDERS`, `CARTS`, `WISHLISTS`)
+    5. **`payment` (결제)**: 결제 승인/취소, 환불 관리, PG 연동 (`PAYMENTS`, `REFUNDS`)
+    6. **`delivery` (배송)**: 배송 추적, 운송장 관리 (`SHIPMENTS`)
+    7. **`promotion` (프로모션)**: 쿠폰 발급 및 사용 관리 (`COUPONS`)
+    8. **Interaction Group**:
+        - **`review` (리뷰)**: 상품 리뷰, 평점 (`REVIEWS`)
+        - **`inquiry` (문의)**: 상품/주문 문의 및 답변 (`INQUIRIES`)
+        - **`notification` (알림)**: 사용자 알림 발송 (`NOTIFICATIONS`)
+    9. **`settlement` (정산)**: 판매 금액 정산, 수수료 계산 (`SETTLEMENTS`, `FEE_POLICIES`)
+    10. **`stats` (통계)**: 조회수/판매량 로그 및 분석 (`PRODUCT_VIEW_LOGS`, `SEARCH_LOGS`)
+    11. **`ai` (AI)**: AI 기반 상품/마켓 설명 생성 (`AI_MARKET_DESCRIPTIONS`)
 
-    - **각 도메인 패키지 내부 계층 구조**:
-        - `interfaces`: 외부 시스템과 통신하는 Web 레이어 (Controller, DTO, Mapper, Facade)
-        - `application`: 비즈니스 로직을 조립하고 트랜잭션을 관리하는 서비스 레이어
-        - `domain`: 비즈니스의 핵심 규칙이 담긴 엔티티 및 Repository 인터페이스 레이어
-        - `infrastructure`: DB 저장 및 외부 연동의 구체적인 기술적 구현 레이어
+    - **각 도메인 패키지 공통 내부 계층 구조**:
+        - `interfaces`: 외부 요청 처리 (Controller, DTO, Facade)
+        - `application`: 비즈니스 흐름 및 트랜잭션 관리 (Service)
+        - `domain`: 핵심 비즈니스 로직 및 엔티티 (Entity, Repository Interface)
+        - `infrastructure`: 기술적 구현체 (Repository Impl, External API)
 
 
 ### **3.2 레이어 간 참조 및 도메인 간 참조 규칙**
@@ -97,6 +112,10 @@
 본 프로젝트의 상세한 데이터베이스 설계 및 ERD는 다음 문서를 참고합니다.
 
 - **상세 설계 문서**: [ERD_IMPROVEMENTS.md](file:///Users/bh/project/MY_SHOP/.agent/ERD_IMPROVEMENTS.md)
+- **테이블 정의서 (DBML)**: [TABLE_SCHEMA.dbml](file:///Users/bh/project/MY_SHOP/.agent/TABLE_SCHEMA.dbml)
+- **엔티티 구조 문서**: [ENTITY_STRUCTURE.md](file:///Users/bh/project/MY_SHOP/.agent/ENTITY_STRUCTURE.md)
+
+
 
 ### **4.1 핵심 설계 방향**
 - **확장성**: Phase 1(MVP)부터 Phase 3(고급 기능)까지 단계별 확장이 가능한 구조

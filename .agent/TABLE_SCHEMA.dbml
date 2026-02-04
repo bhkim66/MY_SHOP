@@ -1,0 +1,654 @@
+// Enhanced Marketplace ERD Schema (DBML)
+// MVP 기능 + 확장 가능한 구조
+
+// ==================== 사용자 관리 ====================
+Table USER as U {
+  SEQ integer [primary key, increment, note: "사용자 SEQ"]
+  LOGIN_ID varchar(50) [not null, unique, note: "로그인 아이디"]
+  PASSWORD varchar(255) [note: "비밀번호 (OAuth만 사용시 NULL)"]
+  NAME varchar(100) [not null, note: "이름"]
+  EMAIL varchar(100) [not null, unique, note: "이메일"]
+  PHONE varchar(20) [note: "전화번호"]
+  ROLE varchar(20) [not null, default: "USER", note: "USER, SELLER, ADMIN"]
+  STATUS varchar(20) [not null, default: "ACTIVE", note: "ACTIVE, INACTIVE, SUSPENDED, WITHDRAWN"]
+  EMAIL_VERIFIED boolean [not null, default: false, note: "이메일 인증 여부"]
+  PHONE_VERIFIED boolean [not null, default: false, note: "전화번호 인증 여부"]
+  LAST_LOGIN_AT timestamp [note: "마지막 로그인"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (LOGIN_ID) [unique]
+    (EMAIL) [unique]
+    (STATUS, ROLE)
+  }
+}
+
+Table USER_SOCIAL_ACCOUNTS {
+  SEQ integer [primary key, increment]
+  USER_SEQ integer [not null, ref: > U.SEQ, note: "사용자 SEQ"]
+  PROVIDER varchar(20) [not null, note: "KAKAO, NAVER, GOOGLE"]
+  PROVIDER_USER_ID varchar(255) [not null, note: "소셜 제공 ID"]
+  EMAIL varchar(100) [note: "소셜에서 제공한 이메일"]
+  ACCESS_TOKEN varchar(500) [note: "액세스 토큰"]
+  REFRESH_TOKEN varchar(500) [note: "리프레시 토큰"]
+  TOKEN_EXPIRES_AT timestamp [note: "토큰 만료일"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (USER_SEQ)
+    (PROVIDER, PROVIDER_USER_ID) [unique]
+  }
+}
+
+Table USER_ADDRESSES {
+  SEQ integer [primary key, increment]
+  USER_SEQ integer [not null, ref: > U.SEQ, note: "사용자 SEQ"]
+  ADDRESS_NAME varchar(50) [note: "배송지명 (집, 회사)"]
+  RECEIVER_NAME varchar(50) [not null, note: "수령인"]
+  RECEIVER_PHONE varchar(20) [not null, note: "연락처"]
+  ZIP_CODE varchar(10) [not null, note: "우편번호"]
+  ADDRESS1 varchar(200) [not null, note: "기본주소"]
+  ADDRESS2 varchar(200) [note: "상세주소"]
+  IS_DEFAULT boolean [not null, default: false, note: "기본 배송지"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (USER_SEQ, IS_DEFAULT)
+  }
+}
+
+// ==================== 마켓 관리 ====================
+Table MARKETS as M {
+  SEQ integer [primary key, increment]
+  OWNER_USER_SEQ integer [not null, ref: > U.SEQ, note: "마켓 소유자"]
+  MARKET_NAME varchar(100) [not null, note: "마켓명"]
+  MARKET_SLUG varchar(100) [not null, unique, note: "마켓 식별자(URL)"]
+  DESCRIPTION text [note: "마켓 소개"]
+  LOGO_URL varchar(500) [note: "로고 이미지"]
+  BANNER_URL varchar(500) [note: "배너 이미지"]
+  BUSINESS_NUMBER varchar(20) [note: "사업자등록번호"]
+  BUSINESS_NAME varchar(100) [note: "상호명"]
+  CEO_NAME varchar(50) [note: "대표자명"]
+  CS_PHONE varchar(20) [note: "고객센터 전화"]
+  CS_EMAIL varchar(100) [note: "고객센터 이메일"]
+  STATUS varchar(20) [not null, default: "PENDING", note: "PENDING, ACTIVE, INACTIVE, SUSPENDED"]
+  APPROVED_AT timestamp [note: "승인일시"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (MARKET_SLUG) [unique]
+    (OWNER_USER_SEQ)
+    (STATUS)
+  }
+}
+
+Table MARKET_SETTINGS {
+  SEQ integer [primary key, increment]
+  MARKET_SEQ integer [not null, ref: > M.SEQ, note: "마켓 SEQ"]
+  SETTING_KEY varchar(50) [not null, note: "설정 키"]
+  SETTING_VALUE text [note: "설정 값 (JSON)"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (MARKET_SEQ, SETTING_KEY) [unique]
+  }
+}
+
+// ==================== 카테고리 관리 ====================
+Table CATEGORIES {
+  SEQ integer [primary key, increment]
+  PARENT_SEQ integer [ref: > CATEGORIES.SEQ, note: "상위 카테고리"]
+  CATEGORY_NAME varchar(100) [not null, note: "카테고리명"]
+  CATEGORY_CODE varchar(50) [not null, unique, note: "카테고리 코드"]
+  DEPTH integer [not null, default: 1, note: "깊이"]
+  SORT_ORDER integer [not null, default: 0, note: "정렬 순서"]
+  IS_DISPLAY boolean [not null, default: true, note: "노출 여부"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (PARENT_SEQ, SORT_ORDER)
+    (CATEGORY_CODE) [unique]
+    (IS_DISPLAY)
+  }
+}
+
+// ==================== 상품 관리 ====================
+Table PRODUCTS as P {
+  SEQ integer [primary key, increment]
+  MARKET_SEQ integer [not null, ref: > M.SEQ, note: "마켓 SEQ"]
+  CATEGORY_SEQ integer [ref: > CATEGORIES.SEQ, note: "카테고리 SEQ"]
+  PRODUCT_NAME varchar(200) [not null, note: "상품명"]
+  PRODUCT_CODE varchar(50) [note: "상품 코드"]
+  DESCRIPTION text [note: "상품 설명"]
+  PRICE integer [not null, note: "정가(원)"]
+  SALE_PRICE integer [note: "판매가(원)"]
+  STOCK_QTY integer [not null, default: 0, note: "재고 수량"]
+  MIN_ORDER_QTY integer [not null, default: 1, note: "최소 주문 수량"]
+  MAX_ORDER_QTY integer [note: "최대 주문 수량"]
+  STATUS varchar(20) [not null, default: "ON_SALE", note: "ON_SALE, SOLD_OUT, HIDDEN, DISCONTINUED"]
+  THUMBNAIL_URL varchar(500) [note: "대표 이미지"]
+  VIEW_COUNT integer [not null, default: 0, note: "조회수"]
+  SALE_COUNT integer [not null, default: 0, note: "판매수"]
+  RATING_AVG decimal(3,2) [default: 0.00, note: "평균 평점"]
+  REVIEW_COUNT integer [not null, default: 0, note: "리뷰 수"]
+  IS_FEATURED boolean [not null, default: false, note: "추천 상품"]
+  SALE_START_AT timestamp [note: "판매 시작일"]
+  SALE_END_AT timestamp [note: "판매 종료일"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (MARKET_SEQ, STATUS)
+    (CATEGORY_SEQ, STATUS)
+    (PRODUCT_CODE)
+    (IS_FEATURED, STATUS)
+    (CREATED_AT)
+    (VIEW_COUNT)
+    (SALE_COUNT)
+  }
+}
+
+Table PRODUCT_OPTIONS {
+  SEQ integer [primary key, increment]
+  PRODUCT_SEQ integer [not null, ref: > P.SEQ, note: "상품 SEQ"]
+  OPTION_GROUP varchar(50) [not null, note: "옵션 그룹 (색상, 사이즈)"]
+  OPTION_NAME varchar(100) [not null, note: "옵션명"]
+  OPTION_VALUE varchar(100) [not null, note: "옵션값"]
+  ADDITIONAL_PRICE integer [not null, default: 0, note: "추가 금액(원)"]
+  STOCK_QTY integer [not null, default: 0, note: "옵션 재고"]
+  STATUS varchar(20) [not null, default: "ACTIVE", note: "ACTIVE, INACTIVE"]
+  SORT_ORDER integer [not null, default: 0, note: "정렬 순서"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (PRODUCT_SEQ, STATUS)
+    (OPTION_GROUP, SORT_ORDER)
+  }
+}
+
+Table PRODUCT_IMAGES {
+  SEQ integer [primary key, increment]
+  PRODUCT_SEQ integer [not null, ref: > P.SEQ, note: "상품 SEQ"]
+  IMAGE_URL varchar(500) [not null, note: "이미지 URL"]
+  IMAGE_TYPE varchar(20) [not null, note: "MAIN, DETAIL, THUMBNAIL"]
+  SORT_ORDER integer [not null, default: 0, note: "정렬 순서"]
+  ALT_TEXT varchar(200) [note: "대체 텍스트"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  
+  indexes {
+    (PRODUCT_SEQ, IMAGE_TYPE, SORT_ORDER)
+  }
+}
+
+// ==================== 장바구니 & 위시리스트 ====================
+Table CARTS {
+  SEQ integer [primary key, increment]
+  USER_SEQ integer [ref: > U.SEQ, note: "사용자 SEQ (비회원 NULL)"]
+  SESSION_ID varchar(100) [note: "비회원 세션 ID"]
+  PRODUCT_SEQ integer [not null, ref: > P.SEQ, note: "상품 SEQ"]
+  PRODUCT_OPTION_SEQ integer [ref: > PRODUCT_OPTIONS.SEQ, note: "옵션 SEQ"]
+  QTY integer [not null, default: 1, note: "수량"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  
+  indexes {
+    (USER_SEQ, PRODUCT_SEQ)
+    (SESSION_ID)
+  }
+}
+
+Table WISHLISTS {
+  SEQ integer [primary key, increment]
+  USER_SEQ integer [not null, ref: > U.SEQ, note: "사용자 SEQ"]
+  PRODUCT_SEQ integer [not null, ref: > P.SEQ, note: "상품 SEQ"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  
+  indexes {
+    (USER_SEQ, PRODUCT_SEQ) [unique]
+    (PRODUCT_SEQ)
+  }
+}
+
+// ==================== 주문 관리 ====================
+Table ORDERS as O {
+  SEQ integer [primary key, increment]
+  ORDER_NO varchar(50) [not null, unique, note: "주문번호"]
+  MARKET_SEQ integer [not null, ref: > M.SEQ, note: "마켓 SEQ"]
+  BUYER_USER_SEQ integer [ref: > U.SEQ, note: "구매자 (비회원 NULL)"]
+  ORDER_STATUS varchar(20) [not null, default: "PENDING", note: "PENDING, CONFIRMED, PREPARING, SHIPPED, DELIVERED, CANCELED, REFUNDED"]
+  TOTAL_PRODUCT_AMOUNT integer [not null, note: "상품 합계(원)"]
+  TOTAL_DISCOUNT_AMOUNT integer [not null, default: 0, note: "할인 합계(원)"]
+  COUPON_DISCOUNT_AMOUNT integer [not null, default: 0, note: "쿠폰 할인(원)"]
+  SHIPPING_FEE integer [not null, default: 0, note: "배송비(원)"]
+  TOTAL_PAY_AMOUNT integer [not null, note: "최종 결제액(원)"]
+  RECEIVER_NAME varchar(50) [not null, note: "수령인"]
+  RECEIVER_PHONE varchar(20) [not null, note: "수령인 연락처"]
+  ZIP_CODE varchar(10) [note: "우편번호"]
+  ADDRESS1 varchar(200) [note: "주소1"]
+  ADDRESS2 varchar(200) [note: "주소2"]
+  SHIPPING_MESSAGE varchar(500) [note: "배송 메시지"]
+  BUYER_NAME varchar(50) [note: "주문자명 (비회원)"]
+  BUYER_EMAIL varchar(100) [note: "주문자 이메일 (비회원)"]
+  BUYER_PHONE varchar(20) [note: "주문자 연락처 (비회원)"]
+  ORDERED_AT timestamp [not null, default: `now()`, note: "주문일시"]
+  CONFIRMED_AT timestamp [note: "주문확정일시"]
+  CANCELED_AT timestamp [note: "취소일시"]
+  CANCEL_REASON varchar(500) [note: "취소 사유"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (ORDER_NO) [unique]
+    (BUYER_USER_SEQ, ORDERED_AT)
+    (MARKET_SEQ, ORDER_STATUS, ORDERED_AT)
+    (ORDER_STATUS, ORDERED_AT)
+  }
+}
+
+Table ORDER_ITEMS {
+  SEQ integer [primary key, increment]
+  ORDER_SEQ integer [not null, ref: > O.SEQ, note: "주문 SEQ"]
+  PRODUCT_SEQ integer [not null, ref: > P.SEQ, note: "상품 SEQ"]
+  PRODUCT_OPTION_SEQ integer [ref: > PRODUCT_OPTIONS.SEQ, note: "옵션 SEQ"]
+  ITEM_NAME varchar(200) [not null, note: "주문시점 상품명"]
+  ITEM_OPTION varchar(200) [note: "주문시점 옵션"]
+  UNIT_PRICE integer [not null, note: "단가(원)"]
+  QTY integer [not null, note: "수량"]
+  ITEM_AMOUNT integer [not null, note: "금액 = UNIT_PRICE * QTY"]
+  DISCOUNT_AMOUNT integer [not null, default: 0, note: "할인액(원)"]
+  ITEM_STATUS varchar(20) [not null, default: "ORDERED", note: "ORDERED, CANCELED, REFUNDED"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (ORDER_SEQ)
+    (PRODUCT_SEQ)
+    (ITEM_STATUS)
+  }
+}
+
+Table ORDER_STATUS_HISTORY {
+  SEQ integer [primary key, increment]
+  ORDER_SEQ integer [not null, ref: > O.SEQ, note: "주문 SEQ"]
+  PREVIOUS_STATUS varchar(20) [note: "이전 상태"]
+  NEW_STATUS varchar(20) [not null, note: "새 상태"]
+  CHANGED_BY integer [note: "변경자 SEQ"]
+  CHANGED_REASON varchar(500) [note: "변경 사유"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  
+  indexes {
+    (ORDER_SEQ, CREATED_AT)
+  }
+}
+
+// ==================== 배송 관리 ====================
+Table SHIPMENTS {
+  SEQ integer [primary key, increment]
+  ORDER_SEQ integer [not null, ref: > O.SEQ, note: "주문 SEQ"]
+  SHIPPING_COMPANY varchar(50) [note: "택배사"]
+  TRACKING_NUMBER varchar(50) [note: "운송장 번호"]
+  SHIPPING_STATUS varchar(20) [not null, default: "PREPARING", note: "PREPARING, SHIPPED, IN_TRANSIT, DELIVERED, RETURNED"]
+  SHIPPED_AT timestamp [note: "출고일시"]
+  DELIVERED_AT timestamp [note: "배송완료일시"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (ORDER_SEQ)
+    (TRACKING_NUMBER)
+    (SHIPPING_STATUS)
+  }
+}
+
+// ==================== 결제 관리 ====================
+Table PAYMENTS as PAY {
+  SEQ integer [primary key, increment]
+  ORDER_SEQ integer [not null, ref: > O.SEQ, note: "주문 SEQ"]
+  PAY_METHOD varchar(20) [not null, note: "CARD, VBANK, TRANSFER, EASY_PAY"]
+  PAY_STATUS varchar(20) [not null, default: "READY", note: "READY, PENDING, SUCCESS, FAILED, CANCELED, REFUNDED"]
+  PAY_AMOUNT integer [not null, note: "결제 금액(원)"]
+  PG_PROVIDER varchar(50) [note: "PG사"]
+  PG_TID varchar(100) [note: "PG 거래 ID"]
+  CARD_COMPANY varchar(50) [note: "카드사"]
+  CARD_NUMBER varchar(20) [note: "카드번호 (마스킹)"]
+  INSTALLMENT_MONTH integer [note: "할부 개월"]
+  VBANK_NAME varchar(50) [note: "가상계좌 은행"]
+  VBANK_NUMBER varchar(50) [note: "가상계좌 번호"]
+  VBANK_EXPIRES_AT timestamp [note: "입금기한"]
+  APPROVED_AT timestamp [note: "승인일시"]
+  CANCELED_AT timestamp [note: "취소일시"]
+  REFUNDED_AT timestamp [note: "환불일시"]
+  FAIL_REASON varchar(500) [note: "실패 사유"]
+  RECEIPT_URL varchar(500) [note: "영수증 URL"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (ORDER_SEQ)
+    (PG_TID)
+    (PAY_STATUS, APPROVED_AT)
+  }
+}
+
+Table REFUNDS {
+  SEQ integer [primary key, increment]
+  PAYMENT_SEQ integer [not null, ref: > PAY.SEQ, note: "결제 SEQ"]
+  ORDER_SEQ integer [not null, ref: > O.SEQ, note: "주문 SEQ"]
+  REFUND_AMOUNT integer [not null, note: "환불 금액(원)"]
+  REFUND_REASON varchar(500) [not null, note: "환불 사유"]
+  REFUND_STATUS varchar(20) [not null, default: "REQUESTED", note: "REQUESTED, APPROVED, PROCESSING, COMPLETED, REJECTED"]
+  BANK_NAME varchar(50) [note: "환불 계좌 은행"]
+  ACCOUNT_NUMBER varchar(50) [note: "계좌번호"]
+  ACCOUNT_HOLDER varchar(50) [note: "예금주"]
+  PROCESSED_AT timestamp [note: "처리완료일시"]
+  REJECTED_AT timestamp [note: "거부일시"]
+  REJECT_REASON varchar(500) [note: "거부 사유"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (PAYMENT_SEQ)
+    (ORDER_SEQ)
+    (REFUND_STATUS)
+  }
+}
+
+// ==================== 쿠폰 시스템 ====================
+Table COUPONS {
+  SEQ integer [primary key, increment]
+  MARKET_SEQ integer [ref: > M.SEQ, note: "마켓 SEQ (NULL=전체)"]
+  COUPON_CODE varchar(50) [not null, unique, note: "쿠폰 코드"]
+  COUPON_NAME varchar(100) [not null, note: "쿠폰명"]
+  COUPON_TYPE varchar(20) [not null, note: "PERCENTAGE, FIXED, FREE_SHIPPING"]
+  DISCOUNT_VALUE integer [not null, note: "할인값 (%, 원)"]
+  MAX_DISCOUNT_AMOUNT integer [note: "최대 할인액(원)"]
+  MIN_ORDER_AMOUNT integer [note: "최소 주문액(원)"]
+  TOTAL_ISSUE_COUNT integer [note: "총 발행 수량"]
+  ISSUED_COUNT integer [not null, default: 0, note: "발행된 수량"]
+  MAX_USE_PER_USER integer [default: 1, note: "1인당 사용 제한"]
+  VALID_FROM timestamp [not null, note: "유효 시작일"]
+  VALID_TO timestamp [not null, note: "유효 종료일"]
+  IS_ACTIVE boolean [not null, default: true, note: "활성화 여부"]
+  DESCRIPTION text [note: "쿠폰 설명"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (COUPON_CODE) [unique]
+    (MARKET_SEQ, IS_ACTIVE)
+    (VALID_FROM, VALID_TO)
+  }
+}
+
+Table USER_COUPONS {
+  SEQ integer [primary key, increment]
+  USER_SEQ integer [not null, ref: > U.SEQ, note: "사용자 SEQ"]
+  COUPON_SEQ integer [not null, ref: > COUPONS.SEQ, note: "쿠폰 SEQ"]
+  IS_USED boolean [not null, default: false, note: "사용 여부"]
+  USED_AT timestamp [note: "사용일시"]
+  ORDER_SEQ integer [ref: > O.SEQ, note: "사용 주문 SEQ"]
+  ISSUED_AT timestamp [not null, default: `now()`, note: "발급일시"]
+  EXPIRES_AT timestamp [not null, note: "만료일시"]
+  
+  indexes {
+    (USER_SEQ, IS_USED, EXPIRES_AT)
+    (COUPON_SEQ)
+    (ORDER_SEQ)
+  }
+}
+
+// ==================== 리뷰 시스템 ====================
+Table REVIEWS {
+  SEQ integer [primary key, increment]
+  PRODUCT_SEQ integer [not null, ref: > P.SEQ, note: "상품 SEQ"]
+  ORDER_ITEM_SEQ integer [ref: > ORDER_ITEMS.SEQ, note: "주문아이템 SEQ"]
+  USER_SEQ integer [not null, ref: > U.SEQ, note: "작성자 SEQ"]
+  RATING integer [not null, note: "평점 (1-5)"]
+  TITLE varchar(200) [note: "리뷰 제목"]
+  CONTENT text [not null, note: "리뷰 내용"]
+  IS_VERIFIED_PURCHASE boolean [not null, default: false, note: "구매 인증"]
+  HELPFUL_COUNT integer [not null, default: 0, note: "도움됨 수"]
+  STATUS varchar(20) [not null, default: "ACTIVE", note: "ACTIVE, HIDDEN, DELETED"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (PRODUCT_SEQ, STATUS, CREATED_AT)
+    (USER_SEQ, STATUS)
+    (ORDER_ITEM_SEQ)
+    (RATING)
+  }
+}
+
+Table REVIEW_IMAGES {
+  SEQ integer [primary key, increment]
+  REVIEW_SEQ integer [not null, ref: > REVIEWS.SEQ, note: "리뷰 SEQ"]
+  IMAGE_URL varchar(500) [not null, note: "이미지 URL"]
+  SORT_ORDER integer [not null, default: 0, note: "정렬 순서"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  
+  indexes {
+    (REVIEW_SEQ, SORT_ORDER)
+  }
+}
+
+Table REVIEW_HELPFUL {
+  SEQ integer [primary key, increment]
+  REVIEW_SEQ integer [not null, ref: > REVIEWS.SEQ, note: "리뷰 SEQ"]
+  USER_SEQ integer [not null, ref: > U.SEQ, note: "사용자 SEQ"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  
+  indexes {
+    (REVIEW_SEQ, USER_SEQ) [unique]
+  }
+}
+
+// ==================== 문의 관리 ====================
+Table INQUIRIES {
+  SEQ integer [primary key, increment]
+  PRODUCT_SEQ integer [ref: > P.SEQ, note: "상품 SEQ"]
+  MARKET_SEQ integer [ref: > M.SEQ, note: "마켓 SEQ"]
+  USER_SEQ integer [not null, ref: > U.SEQ, note: "작성자 SEQ"]
+  INQUIRY_TYPE varchar(20) [not null, note: "PRODUCT, ORDER, DELIVERY, REFUND, ETC"]
+  TITLE varchar(200) [not null, note: "문의 제목"]
+  CONTENT text [not null, note: "문의 내용"]
+  IS_SECRET boolean [not null, default: false, note: "비밀글"]
+  IS_ANSWERED boolean [not null, default: false, note: "답변 여부"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (PRODUCT_SEQ, IS_ANSWERED)
+    (MARKET_SEQ, IS_ANSWERED)
+    (USER_SEQ, CREATED_AT)
+  }
+}
+
+Table INQUIRY_ANSWERS {
+  SEQ integer [primary key, increment]
+  INQUIRY_SEQ integer [not null, ref: > INQUIRIES.SEQ, note: "문의 SEQ"]
+  ANSWER_CONTENT text [not null, note: "답변 내용"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (INQUIRY_SEQ)
+  }
+}
+
+// ==================== 정산 관리 ====================
+Table SETTLEMENTS as S {
+  SEQ integer [primary key, increment]
+  MARKET_SEQ integer [not null, ref: > M.SEQ, note: "마켓 SEQ"]
+  SETTLEMENT_PERIOD_START timestamp [not null, note: "정산 시작일"]
+  SETTLEMENT_PERIOD_END timestamp [not null, note: "정산 종료일"]
+  TOTAL_PAY_AMOUNT integer [not null, note: "총 결제액(원)"]
+  TOTAL_REFUND_AMOUNT integer [not null, default: 0, note: "총 환불액(원)"]
+  FEE_AMOUNT integer [not null, default: 0, note: "수수료(원)"]
+  SETTLEMENT_AMOUNT integer [not null, note: "정산액(원)"]
+  STATUS varchar(20) [not null, default: "CALCULATING", note: "CALCULATING, READY, CONFIRMED, PROCESSING, DONE, FAILED"]
+  CONFIRMED_AT timestamp [note: "확정일시"]
+  SETTLED_AT timestamp [note: "정산완료일시"]
+  BANK_NAME varchar(50) [note: "입금 은행"]
+  ACCOUNT_NUMBER varchar(50) [note: "계좌번호"]
+  ACCOUNT_HOLDER varchar(50) [note: "예금주"]
+  NOTES text [note: "비고"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (MARKET_SEQ, STATUS)
+    (SETTLEMENT_PERIOD_START, SETTLEMENT_PERIOD_END)
+    (STATUS, CONFIRMED_AT)
+  }
+}
+
+Table SETTLEMENT_ORDERS {
+  SEQ integer [primary key, increment]
+  SETTLEMENT_SEQ integer [not null, ref: > S.SEQ, note: "정산 SEQ"]
+  ORDER_SEQ integer [not null, ref: > O.SEQ, note: "주문 SEQ"]
+  PAY_AMOUNT integer [not null, note: "결제액(원)"]
+  REFUND_AMOUNT integer [not null, default: 0, note: "환불액(원)"]
+  FEE_AMOUNT integer [not null, default: 0, note: "수수료(원)"]
+  NET_AMOUNT integer [not null, note: "순 정산액(원)"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (SETTLEMENT_SEQ)
+    (ORDER_SEQ)
+  }
+}
+
+// ==================== 수수료 정책 ====================
+Table FEE_POLICIES {
+  SEQ integer [primary key, increment]
+  MARKET_SEQ integer [ref: > M.SEQ, note: "마켓 SEQ (NULL=전체)"]
+  POLICY_NAME varchar(100) [not null, note: "정책명"]
+  FEE_TYPE varchar(20) [not null, note: "PERCENTAGE, FIXED"]
+  FEE_VALUE decimal(10,2) [not null, note: "수수료 값"]
+  MIN_FEE integer [note: "최소 수수료(원)"]
+  MAX_FEE integer [note: "최대 수수료(원)"]
+  EFFECTIVE_FROM timestamp [not null, note: "적용 시작일"]
+  EFFECTIVE_TO timestamp [note: "적용 종료일"]
+  IS_ACTIVE boolean [not null, default: true, note: "활성화"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (MARKET_SEQ, IS_ACTIVE, EFFECTIVE_FROM)
+  }
+}
+
+// ==================== 알림 시스템 ====================
+Table NOTIFICATIONS {
+  SEQ integer [primary key, increment]
+  USER_SEQ integer [not null, ref: > U.SEQ, note: "사용자 SEQ"]
+  NOTIFICATION_TYPE varchar(20) [not null, note: "ORDER, PAYMENT, SHIPMENT, REVIEW, INQUIRY, PROMOTION"]
+  TITLE varchar(200) [not null, note: "알림 제목"]
+  CONTENT text [not null, note: "알림 내용"]
+  LINK_URL varchar(500) [note: "연결 URL"]
+  IS_READ boolean [not null, default: false, note: "읽음 여부"]
+  READ_AT timestamp [note: "읽은 시간"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  
+  indexes {
+    (USER_SEQ, IS_READ, CREATED_AT)
+    (NOTIFICATION_TYPE)
+  }
+}
+
+// ==================== 통계 & 로그 ====================
+Table PRODUCT_VIEW_LOGS {
+  SEQ integer [primary key, increment]
+  PRODUCT_SEQ integer [not null, ref: > P.SEQ, note: "상품 SEQ"]
+  USER_SEQ integer [ref: > U.SEQ, note: "사용자 SEQ"]
+  SESSION_ID varchar(100) [note: "세션 ID"]
+  IP_ADDRESS varchar(50) [note: "IP 주소"]
+  USER_AGENT text [note: "User Agent"]
+  VIEWED_AT timestamp [not null, default: `now()`, note: "조회일시"]
+  
+  indexes {
+    (PRODUCT_SEQ, VIEWED_AT)
+    (USER_SEQ, VIEWED_AT)
+    (SESSION_ID)
+  }
+}
+
+Table SEARCH_LOGS {
+  SEQ integer [primary key, increment]
+  USER_SEQ integer [ref: > U.SEQ, note: "사용자 SEQ"]
+  SEARCH_KEYWORD varchar(200) [not null, note: "검색어"]
+  RESULT_COUNT integer [note: "검색 결과 수"]
+  SESSION_ID varchar(100) [note: "세션 ID"]
+  SEARCHED_AT timestamp [not null, default: `now()`, note: "검색일시"]
+  
+  indexes {
+    (SEARCH_KEYWORD, SEARCHED_AT)
+    (USER_SEQ, SEARCHED_AT)
+  }
+}
+
+// ==================== AI 서비스 (v2) ====================
+Table AI_MARKET_DESCRIPTIONS {
+  SEQ integer [primary key, increment]
+  MARKET_SEQ integer [not null, ref: > M.SEQ, note: "마켓 SEQ"]
+  PROMPT text [note: "AI 프롬프트"]
+  GENERATED_DESCRIPTION text [not null, note: "생성된 설명"]
+  AI_MODEL varchar(50) [note: "사용 AI 모델"]
+  IS_APPLIED boolean [not null, default: false, note: "적용 여부"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  
+  indexes {
+    (MARKET_SEQ, CREATED_AT)
+  }
+}
