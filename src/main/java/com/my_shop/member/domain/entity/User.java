@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user", indexes = {
+@Table(name = "users", indexes = {
         @Index(name = "idx_user_login_id", columnList = "login_id", unique = true),
         @Index(name = "idx_user_email", columnList = "email", unique = true),
         @Index(name = "idx_user_status_role", columnList = "status, role")
@@ -38,11 +38,13 @@ public class User extends BaseEntity {
     @Column(name = "phone", length = 20)
     private String phone;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
-    private String role; // USER, SELLER, ADMIN
+    private MemberRole role; // USER, SELLER, ADMIN
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private String status; // ACTIVE, INACTIVE, SUSPENDED, WITHDRAWN
+    private MemberStatus status; // ACTIVE, INACTIVE, SUSPENDED, WITHDRAWN
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;
@@ -52,4 +54,19 @@ public class User extends BaseEntity {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
+    public static User create(String loginId, String password, String name, String email, String phone,
+            MemberRole role) {
+        User user = new User();
+        user.loginId = loginId;
+        user.password = password;
+        user.name = name;
+        user.email = email;
+        user.phone = phone;
+        user.role = role;
+        user.status = MemberStatus.ACTIVE;
+        user.emailVerified = false;
+        user.phoneVerified = false;
+        return user;
+    }
 }

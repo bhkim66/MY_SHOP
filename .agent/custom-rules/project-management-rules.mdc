@@ -1,0 +1,30 @@
+---
+description: "프로젝트 관리 룰 - 문서 관리, 스키마 변경 추적, 요구사항 및 엔티티 구조 업데이트 지침을 제공합니다."
+alwaysApply: true
+---
+# 프로젝트 관리 규칙
+
+이 문서는 프로젝트의 일관된 개발 경험과 문서화를 유지하기 위한 관리 지침입니다.
+
+## 1. 문서 백업 및 생성 규칙
+- 새로운 기능 개발을 시작하기 전, 해당 기능을 위한 `plan`, `task`, `walkthrough` 등의 문서를 `docs/YYYY-MM-DD/` 하위에 생성할지 여부를 **반드시 사용자에게 먼저 질문**해야 합니다.
+- 사용자가 승인하면 해당 경로에 문서를 생성하고 관리합니다.
+
+## 2. DB 및 스키마 변경 관리
+- 데이터베이스 스키마(ERD)가 변동되는 경우, 다음 문서들을 즉시 수정해야 합니다.
+  - [.agent/ERD_IMPROVEMENTS.md](file:///Users/bh/project/MY_SHOP/.agent/ERD_IMPROVEMENTS.md)
+  - [.agent/TABLE_SCHEMA.dbml](file:///Users/bh/project/MY_SHOP/.agent/TABLE_SCHEMA.dbml)
+- 스키마 변경 시 수정 이력을 기록하는 [.agent/SCHEMA_CHANGE_HISTORY.md](file:///Users/bh/project/MY_SHOP/.agent/SCHEMA_CHANGE_HISTORY.md) 파일을 유지 관리해야 합니다.
+
+## 3. 기능 및 요구사항 변경 관리
+- 기능이 수정되거나 요구사항이 변경되는 경우, 다음 문서들을 최신 상태로 업데이트해야 합니다.
+  - [.agent/REQUIREMENTS.md](file:///Users/bh/project/MY_SHOP/.agent/REQUIREMENTS.md)
+  - [.agent/ENTITY_STRUCTURE.md](file:///Users/bh/project/MY_SHOP/.agent/ENTITY_STRUCTURE.md)
+
+## 4. 룰(Rule) 관리 규칙
+- 새로운 커스텀 룰(.mdc)을 생성할 때는 반드시 [.agent/custom-rules/](file:///Users/bh/project/MY_SHOP/.agent/custom-rules/) 디렉토리 하위에 생성해야 합니다.
+- 기존 룰을 수정하거나 새로운 룰을 추가할 때 이 위치를 기본 경로로 사용합니다.
+
+## 5. 객체지향 및 클린 코드 원칙
+- 모든 개발은 **SOLID 원칙**을 준수해야 합니다.
+- DB 변동 시 관련 도메인 엔티티를 즉시 수정하여 일관성을 유지합니다.
