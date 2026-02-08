@@ -11,7 +11,8 @@
 ---
 
 ## 2. Member (회원)
-- **`User`** (`user`): 핵심 사용자 정보 (로그인 ID, 비밀번호, 이름, 상태 등).
+- **`User`** (`users`): 핵심 사용자 정보 (로그인 ID, 비밀번호, 이름, 상태 등).
+- **`RefreshToken`** (`refresh_token`): JWT 리프레시 토큰 저장 및 세션 관리.
 - **`UserSocialAccount`** (`user_social_accounts`): 소셜 로그인(Kakao, Google, Naver) 연동 정보.
 - **`UserAddress`** (`user_addresses`): 회원의 배송지 목록 관리.
 

@@ -2,7 +2,7 @@
 // MVP 기능 + 확장 가능한 구조
 
 // ==================== 사용자 관리 ====================
-Table USER as U {
+Table users as U {
   SEQ integer [primary key, increment, note: "사용자 SEQ"]
   LOGIN_ID varchar(50) [not null, unique, note: "로그인 아이디"]
   PASSWORD varchar(255) [note: "비밀번호 (OAuth만 사용시 NULL)"]
