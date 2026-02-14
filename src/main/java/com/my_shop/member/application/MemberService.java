@@ -114,4 +114,11 @@ public class MemberService {
         // 토큰 발급
         return tokenDto;
     }
+
+    @Transactional(readOnly = true)
+    public MemberResponse getMember(Long seq) {
+        return userRepository.findById(seq)
+                .map(MemberResponse::of)
+                .orElseThrow(() -> new RuntimeException("유저 정보가 없습니다."));
+    }
 }

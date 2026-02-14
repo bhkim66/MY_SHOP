@@ -49,13 +49,13 @@ public class JwtTokenProvider {
                 .setSubject(authentication.getName()) // payload "sub": "name"
                 .claim(AUTHORITIES_KEY, authorities) // payload "auth": "ROLE_USER"
                 .setExpiration(accessTokenExpiresIn) // payload "exp": 1516239022 (예시)
-                .signWith(key, SignatureAlgorithm.HS512) // header "alg": "HS512"
+                .signWith(key, SignatureAlgorithm.HS256) // header "alg": "HS256"
                 .compact();
 
         // Refresh Token 생성
         String refreshToken = Jwts.builder()
                 .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
-                .signWith(key, SignatureAlgorithm.HS512)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
         return TokenDto.builder()

@@ -2,7 +2,6 @@ package com.my_shop.member;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my_shop.common.security.TokenDto;
-import com.my_shop.member.domain.entity.MemberRole;
 import com.my_shop.member.interfaces.dto.LoginRequest;
 import com.my_shop.member.interfaces.dto.MemberRegisterRequest;
 import com.my_shop.member.interfaces.dto.TokenRequest;
@@ -19,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,7 +45,7 @@ class MemberIntegrationTest {
                                 "BUYER");
 
                 // when & then
-                mockMvc.perform(post("/api/v1/members/signup")
+                mockMvc.perform(post("/v1/members/signup")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                                 .andDo(print())
@@ -60,14 +60,16 @@ class MemberIntegrationTest {
                 // given
                 MemberRegisterRequest signupRequest = createRegisterRequest("login@test.com", "Password123!", "로그인테스터",
                                 "010-1111-2222", "BUYER");
-                mockMvc.perform(post("/api/v1/members/signup")
+                mockMvc.perform(post("/v1/members/signup")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(signupRequest)));
+                                .content(objectMapper.writeValueAsString(signupRequest)))
+                                .andDo(print())
+                                .andExpect(status().isOk());
 
                 LoginRequest loginRequest = createLoginRequest("login@test.com", "Password123!");
 
                 // when & then
-                mockMvc.perform(post("/api/v1/auth/login")
+                mockMvc.perform(post("/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(loginRequest)))
                                 .andDo(print())
@@ -84,13 +86,15 @@ class MemberIntegrationTest {
                 MemberRegisterRequest signupRequest = createRegisterRequest("reissue@test.com", "Password123!",
                                 "재발급테스터",
                                 "010-3333-4444", "BUYER");
-                mockMvc.perform(post("/api/v1/members/signup")
+                mockMvc.perform(post("/v1/members/signup")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(signupRequest)));
+                                .content(objectMapper.writeValueAsString(signupRequest)))
+                                .andDo(print())
+                                .andExpect(status().isOk());
 
                 // 2. 로그인
                 LoginRequest loginRequest = createLoginRequest("reissue@test.com", "Password123!");
-                MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
+                MvcResult loginResult = mockMvc.perform(post("/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(loginRequest)))
                                 .andReturn();
@@ -102,13 +106,45 @@ class MemberIntegrationTest {
                 TokenRequest tokenRequest = createTokenRequest(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
 
                 // when & then
-                mockMvc.perform(post("/api/v1/auth/reissue")
+                mockMvc.perform(post("/v1/auth/reissue")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(tokenRequest)))
                                 .andDo(print())
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.accessToken").exists())
                                 .andExpect(jsonPath("$.refreshToken").exists());
+        }
+
+        @Test
+        @DisplayName("내 정보 조회 테스트")
+        void getMe_success() throws Exception {
+                // given
+                // 1. 회원가입
+                MemberRegisterRequest signupRequest = createRegisterRequest("me@test.com", "Password123!", "마이페이지",
+                                "010-5555-6666", "BUYER");
+                mockMvc.perform(post("/v1/members/signup")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(signupRequest)));
+
+                // 2. 로그인
+                LoginRequest loginRequest = createLoginRequest("me@test.com", "Password123!");
+                MvcResult loginResult = mockMvc.perform(post("/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(loginRequest)))
+                                .andReturn();
+
+                String responseBody = loginResult.getResponse().getContentAsString();
+                TokenDto tokenDto = objectMapper.readValue(responseBody, TokenDto.class);
+
+                // when & then
+                mockMvc.perform(get("/v1/auth/me")
+                                .header("Authorization", "Bearer " + tokenDto.getAccessToken()))
+                                .andDo(print())
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.email").value("me@test.com"))
+                                .andExpect(jsonPath("$.name").value("마이페이지"))
+                                .andExpect(jsonPath("$.role").value("BUYER"))
+                                .andExpect(jsonPath("$.status").value("ACTIVE"));
         }
 
         private MemberRegisterRequest createRegisterRequest(String email, String password, String name, String phone,

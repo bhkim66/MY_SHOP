@@ -7,6 +7,7 @@
 모든 도메인에서 공통으로 사용하는 기반 엔티티입니다. (util, interceptor, aop 등)
 - **`BaseTimeEntity`**: `createdAt`, `updatedAt` 등 시간 정보를 자동 관리합니다.
 - **`BaseEntity`** (`BaseTimeEntity` 상속): `createdBy`, `updatedBy` 등 생성/수정자 정보까지 포함하여 전체 감사(Audit) 기능을 제공합니다.
+- **`LoggingConfig`**: API 요청 시 Payload와 Query String을 로깅하여 개발 중 디버깅을 용이하게 합니다.
 
 ---
 
