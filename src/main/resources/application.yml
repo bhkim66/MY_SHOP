@@ -18,9 +18,9 @@ logging:
   level:
     root: INFO
     com.my_shop: DEBUG
-    org.springframework.web: DEBUG
+    org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.orm.jdbc.bind: TRACE
 
 jwt:
   secret: bXlzaG9wLWp3dC1zZWNyZXQta2V5LWZvci1obWFjLXNoYS0yNTYtYWxnb3JpdGhtLXNlY3VyaXR5
