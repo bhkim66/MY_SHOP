@@ -1,4 +1,4 @@
-package com.my_shop.member.interfaces;
+package com.my_shop.member.interfaces.controller;
 
 import com.my_shop.member.application.MemberService;
 import com.my_shop.member.interfaces.dto.MemberRegisterRequest;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/members")
+@RequestMapping("/v1/members")
 @RequiredArgsConstructor
 public class MemberController {
     private final MemberService memberService;

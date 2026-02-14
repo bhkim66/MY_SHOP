@@ -1,4 +1,4 @@
-package com.my_shop.member.interfaces;
+package com.my_shop.member.interfaces.controller;
 
 import com.my_shop.common.security.TokenDto;
 import com.my_shop.member.application.MemberService;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final MemberService memberService;

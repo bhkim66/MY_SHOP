@@ -10,6 +10,10 @@ spring:
         format_sql: true
         use_sql_comments: true
 
+server:
+  servlet:
+    context-path: /api
+
 logging:
   level:
     root: INFO
@@ -17,3 +21,6 @@ logging:
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+jwt:
+  secret: bXlzaG9wLWp3dC1zZWNyZXQta2V5LWZvci1obWFjLXNoYS0yNTYtYWxnb3JpdGhtLXNlY3VyaXR5
