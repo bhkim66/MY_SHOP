@@ -4,9 +4,6 @@ spring:
     driverClassName: org.h2.Driver
     username: sa
     password: 
-  output:
-    ansi:
-      enabled: always
   h2:
     console:
       enabled: true
@@ -32,5 +29,3 @@ logging:
     org.hibernate.stat: DEBUG
   pattern:
     console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"
-
-

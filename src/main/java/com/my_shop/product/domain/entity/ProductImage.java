@@ -3,6 +3,8 @@ package com.my_shop.product.domain.entity;
 import com.my_shop.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedBy;
@@ -14,6 +16,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class ProductImage extends BaseTimeEntity {
 
@@ -41,4 +45,18 @@ public class ProductImage extends BaseTimeEntity {
     @CreatedBy
     @Column(name = "created_by", updatable = false, nullable = false)
     private Long createdBy;
+
+    /**
+     * ProductImage 생성 정적 팩토리 메서드
+     */
+    public static ProductImage create(Product product, String imageUrl, String imageType, int sortOrder,
+            String altText) {
+        return ProductImage.builder()
+                .product(product)
+                .imageUrl(imageUrl)
+                .imageType(imageType)
+                .sortOrder(sortOrder)
+                .altText(altText)
+                .build();
+    }
 }

@@ -49,11 +49,18 @@ public class MemberService {
 
         User savedUser = userRepository.save(user);
 
-        // SELLER인 경우 Market 생성 로직 (간소화)
+        // SELLER인 경우 Market 자동 생성
         if (request.getRoleEnum() == MemberRole.SELLER) {
-            // Market 생성 로직은 MarketService로 위임하거나 여기서 처리
-            // 현재는 MarketRepository가 없거나(가상) 구현되지 않았을 수 있어 주석 처리 혹은 간단 구현
-            // TODO: Market 생성 로직 추가
+            String marketSlug = request.getEmail().replace("@", "-").replace(".", "-");
+            String marketName = request.getName() + "'s Shop";
+
+            Market market = Market.create(
+                    savedUser,
+                    marketName,
+                    marketSlug,
+                    null, // description은 선택사항
+                    "ACTIVE");
+            marketRepository.save(market);
         }
 
         return MemberResponse.of(savedUser);
