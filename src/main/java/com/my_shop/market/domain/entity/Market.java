@@ -4,6 +4,8 @@ import com.my_shop.common.entity.BaseEntity;
 import com.my_shop.member.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +19,8 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class Market extends BaseEntity {
 
     @Id
@@ -63,4 +67,18 @@ public class Market extends BaseEntity {
 
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
+
+    /**
+     * Market 생성 정적 팩토리 메서드
+     * SELLER 회원가입 시 자동으로 기본 Market을 생성하는 용도
+     */
+    public static Market create(User owner, String marketName, String marketSlug, String description, String status) {
+        return Market.builder()
+                .owner(owner)
+                .marketName(marketName)
+                .marketSlug(marketSlug)
+                .description(description)
+                .status(status)
+                .build();
+    }
 }

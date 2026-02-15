@@ -245,7 +245,6 @@ Table ORDERS as O {
   COUPON_DISCOUNT_AMOUNT integer [not null, default: 0, note: "쿠폰 할인(원)"]
   SHIPPING_FEE integer [not null, default: 0, note: "배송비(원)"]
   TOTAL_PAY_AMOUNT integer [not null, note: "최종 결제액(원)"]
-
   ORDERED_AT timestamp [not null, default: `now()`, note: "주문일시"]
   CONFIRMED_AT timestamp [note: "주문확정일시"]
   CANCELED_AT timestamp [note: "취소일시"]

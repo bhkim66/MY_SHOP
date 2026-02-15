@@ -5,6 +5,8 @@ import com.my_shop.market.domain.entity.Market;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,6 +25,8 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class Product extends BaseEntity {
 
     @Id
@@ -88,4 +92,83 @@ public class Product extends BaseEntity {
 
     @Column(name = "sale_end_at")
     private LocalDateTime saleEndAt;
+
+    /**
+     * Product 생성 정적 팩토리 메서드
+     */
+    public static Product create(Market market, Category category, String productName,
+            String description, Integer price, Integer stockQty, String thumbnailUrl) {
+        return Product.builder()
+                .market(market)
+                .category(category)
+                .productName(productName)
+                .description(description)
+                .price(price)
+                .stockQty(stockQty)
+                .status(stockQty > 0 ? "ON_SALE" : "SOLD_OUT")
+                .thumbnailUrl(thumbnailUrl)
+                .viewCount(0)
+                .saleCount(0)
+                .minOrderQty(1) // 기본값
+                .build();
+    }
+
+    /**
+     * 상품 정보 업데이트
+     * null인 필드는 업데이트하지 않음
+     */
+    public void update(String productName, String description, Integer price, Integer stockQty, String thumbnailUrl) {
+        if (productName != null) {
+            this.productName = productName;
+        }
+        if (description != null) {
+            this.description = description;
+        }
+        if (price != null) {
+            this.price = price;
+        }
+        if (stockQty != null) {
+            this.stockQty = stockQty;
+            updateStatus();
+        }
+        if (thumbnailUrl != null) {
+            this.thumbnailUrl = thumbnailUrl;
+        }
+    }
+
+    /**
+     * 재고에 따라 상태 자동 업데이트
+     */
+    private void updateStatus() {
+        if (this.stockQty <= 0) {
+            this.status = "SOLD_OUT";
+        } else if ("SOLD_OUT".equals(this.status)) {
+            this.status = "ON_SALE";
+        }
+    }
+
+    /**
+     * 조회수 증가
+     */
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
+
+    /**
+     * 재고 감소 (주문 시)
+     */
+    public void decreaseStock(int quantity) {
+        if (this.stockQty < quantity) {
+            throw new RuntimeException("재고가 부족합니다");
+        }
+        this.stockQty -= quantity;
+        updateStatus();
+    }
+
+    /**
+     * 판매 수량 증가 (주문 완료 시)
+     */
+    public void increaseSaleCount(int quantity) {
+        this.saleCount += quantity;
+    }
 }
