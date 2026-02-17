@@ -24,9 +24,29 @@ VALUES (4, 'BEAUTY', '뷰티', 1, true, 4, CURRENT_TIMESTAMP, 1);
 INSERT INTO categories (seq, category_code, category_name, depth, is_display, sort_order, created_at, created_by)
 VALUES (5, 'HOME', '가구/인테리어', 1, true, 5, CURRENT_TIMESTAMP, 1);
 
+-- 패션 하위 카테고리
+INSERT INTO categories (seq, parent_seq, category_code, category_name, depth, is_display, sort_order, created_at, created_by)
+VALUES (6, 1, 'FASHION_TOP', '상의', 2, true, 1, CURRENT_TIMESTAMP, 1);
+
+INSERT INTO categories (seq, parent_seq, category_code, category_name, depth, is_display, sort_order, created_at, created_by)
+VALUES (7, 1, 'FASHION_BOTTOM', '하의', 2, true, 2, CURRENT_TIMESTAMP, 1);
+
+INSERT INTO categories (seq, parent_seq, category_code, category_name, depth, is_display, sort_order, created_at, created_by)
+VALUES (8, 1, 'FASHION_OUTER', '아우터', 2, true, 3, CURRENT_TIMESTAMP, 1);
+
+INSERT INTO categories (seq, parent_seq, category_code, category_name, depth, is_display, sort_order, created_at, created_by)
+VALUES (9, 1, 'FASHION_SHOES', '신발', 2, true, 4, CURRENT_TIMESTAMP, 1);
+
+-- 전자기기 하위 카테고리
+INSERT INTO categories (seq, parent_seq, category_code, category_name, depth, is_display, sort_order, created_at, created_by)
+VALUES (10, 2, 'ELECTRONICS_AUDIO', '오디오', 2, true, 1, CURRENT_TIMESTAMP, 1);
+
+INSERT INTO categories (seq, parent_seq, category_code, category_name, depth, is_display, sort_order, created_at, created_by)
+VALUES (11, 2, 'ELECTRONICS_MOBILE', '모바일', 2, true, 2, CURRENT_TIMESTAMP, 1);
+
 -- Identity 시작값 조정 (H2 용)
 ALTER TABLE users ALTER COLUMN seq RESTART WITH 10;
-ALTER TABLE categories ALTER COLUMN seq RESTART WITH 10;
+ALTER TABLE categories ALTER COLUMN seq RESTART WITH 20;
 
 -- Market 데이터 (seller 유저용)
 INSERT INTO markets (seq, owner_user_seq, market_name, market_slug, description, status, created_at, created_by)

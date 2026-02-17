@@ -18,6 +18,15 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     show-sql: true
     defer-datasource-initialization: true
+    
+    # HikariCP 설정 추가
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: MyShopHikariPool
 
 logging:
   level:
