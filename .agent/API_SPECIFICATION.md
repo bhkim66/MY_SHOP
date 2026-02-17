@@ -7,6 +7,7 @@ MY_SHOP 프로젝트의 모든 REST API 엔드포인트를 문서화합니다.
 ## 목차
 - [인증(Authentication)](#인증authentication)
 - [회원 관리 API](#회원-관리-api)
+- [카테고리 API](#카테고리-api)
 - [상품 관리 API (SELLER)](#상품-관리-api-seller)
 - [대시보드 API (SELLER)](#대시보드-api-seller)
 - [주문 관리 API (SELLER)](#주문-관리-api-seller)
@@ -132,6 +133,62 @@ Content-Type: application/json
 
 > [!NOTE]
 > SELLER로 가입 시 자동으로 Market이 생성됩니다.
+
+---
+
+## 카테고리 API
+
+> [!NOTE]
+> 카테고리 API는 **인증 없이** 호출 가능합니다. (`SecurityConfig`에서 `/v1/categories/**` 경로를 `permitAll` 처리)
+
+### 1. 전체 카테고리 목록 조회
+
+```http
+GET /v1/categories
+```
+
+**Request**: 없음
+
+**Response (200 OK)**:
+```json
+[
+  {
+    "seq": 1,
+    "categoryCode": "FASHION",
+    "categoryName": "패션/의류",
+    "depth": 1,
+    "sortOrder": 1
+  },
+  {
+    "seq": 6,
+    "categoryCode": "FASHION_TOP",
+    "categoryName": "상의",
+    "depth": 2,
+    "sortOrder": 1
+  },
+  {
+    "seq": 7,
+    "categoryCode": "FASHION_BOTTOM",
+    "categoryName": "하의",
+    "depth": 2,
+    "sortOrder": 2
+  }
+]
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| seq | Long | 카테고리 ID |
+| categoryCode | String | 카테고리 코드 (고유값) |
+| categoryName | String | 카테고리 표시명 |
+| depth | Integer | 계층 깊이 (1: 최상위, 2: 하위) |
+| sortOrder | Integer | 같은 계층 내 정렬 순서 |
+
+> [!NOTE]
+> - `is_display = true`인 카테고리만 반환됩니다.
+> - 응답 목록은 `sort_order` 오름차순으로 정렬됩니다.
+> - 부모 카테고리 참조(`parent_seq`)는 응답에 포함되지 않습니다. 계층 구조 구성이 필요한 경우 클라이언트에서 `seq`를 키로 매핑하여 처리합니다.
 
 ---
 
@@ -506,6 +563,25 @@ Authorization: Bearer {access_token}
 ```
 
 ### 카테고리 코드
-- `FASHION_TOP`: 패션 > 상의
-- `FASHION_BOTTOM`: 패션 > 하의
-- `ELECTRONICS_AUDIO`: 전자기기 > 오디오
+
+**1depth (최상위)**
+| 코드 | 이름 | seq |
+|------|------|-----|
+| `FASHION` | 패션/의류 | 1 |
+| `ELECTRONICS` | 가전/디지털 | 2 |
+| `FOOD` | 식품 | 3 |
+| `BEAUTY` | 뷰티 | 4 |
+| `HOME` | 가구/인테리어 | 5 |
+
+**2depth (하위)**
+| 코드 | 이름 | 부모 | seq |
+|------|------|------|-----|
+| `FASHION_TOP` | 상의 | 패션/의류 | 6 |
+| `FASHION_BOTTOM` | 하의 | 패션/의류 | 7 |
+| `FASHION_OUTER` | 아우터 | 패션/의류 | 8 |
+| `FASHION_SHOES` | 신발 | 패션/의류 | 9 |
+| `ELECTRONICS_AUDIO` | 오디오 | 가전/디지털 | 10 |
+| `ELECTRONICS_MOBILE` | 모바일 | 가전/디지털 | 11 |
+
+> [!NOTE]
+> 상품 등록 시 `categoryCode` 필드에는 **2depth 코드**를 사용합니다.
