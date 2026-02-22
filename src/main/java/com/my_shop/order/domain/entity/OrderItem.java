@@ -5,6 +5,8 @@ import com.my_shop.product.domain.entity.Product;
 import com.my_shop.product.domain.entity.ProductOption;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -16,6 +18,8 @@ import lombok.NoArgsConstructor;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class OrderItem extends BaseEntity {
 
     @Id
@@ -55,4 +59,23 @@ public class OrderItem extends BaseEntity {
 
     @Column(name = "item_status", nullable = false, length = 20)
     private String itemStatus;
+
+    /**
+     * OrderItem 생성 팩토리 메서드
+     */
+    public static OrderItem create(Order order, Product product, int qty) {
+        int unitPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getPrice();
+        int itemAmount = unitPrice * qty;
+
+        return OrderItem.builder()
+                .order(order)
+                .product(product)
+                .itemName(product.getProductName())
+                .unitPrice(unitPrice)
+                .qty(qty)
+                .itemAmount(itemAmount)
+                .discountAmount(0)
+                .itemStatus("PENDING")
+                .build();
+    }
 }

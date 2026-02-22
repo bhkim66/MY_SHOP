@@ -8,6 +8,9 @@ MY_SHOP 프로젝트의 모든 REST API 엔드포인트를 문서화합니다.
 - [인증(Authentication)](#인증authentication)
 - [회원 관리 API](#회원-관리-api)
 - [카테고리 API](#카테고리-api)
+- [구매자 상품 API (PUBLIC)](#구매자-상품-api-public)
+- [주문 API (BUYER)](#주문-api-buyer)
+- [결제 API (MOCK)](#결제-api-mock)
 - [상품 관리 API (SELLER)](#상품-관리-api-seller)
 - [대시보드 API (SELLER)](#대시보드-api-seller)
 - [주문 관리 API (SELLER)](#주문-관리-api-seller)
@@ -189,6 +192,500 @@ GET /v1/categories
 > - `is_display = true`인 카테고리만 반환됩니다.
 > - 응답 목록은 `sort_order` 오름차순으로 정렬됩니다.
 > - 부모 카테고리 참조(`parent_seq`)는 응답에 포함되지 않습니다. 계층 구조 구성이 필요한 경우 클라이언트에서 `seq`를 키로 매핑하여 처리합니다.
+
+---
+
+## 구매자 상품 API (PUBLIC)
+
+> [!NOTE]
+> 구매자 상품 API는 **인증 없이** 호출 가능합니다. 일반 사용자가 상품을 조회할 수 있는 공개 API입니다.
+
+### 1. 상품 목록 조회
+
+```http
+GET /v1/products?page=0&size=12&sort=createdAt,desc
+```
+
+**Query Parameters**:
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|----------|------|------|--------|------|
+| page | Integer | X | 0 | 페이지 번호 (0부터 시작) |
+| size | Integer | X | 12 | 페이지 크기 |
+| sort | String | X | createdAt,desc | 정렬 기준 (field,direction) |
+
+**Response (200 OK)**:
+```json
+{
+  "content": [
+    {
+      "seq": 1,
+      "productName": "기본 면 티셔츠",
+      "price": 29000,
+      "salePrice": 25000,
+      "thumbnailUrl": "https://via.placeholder.com/400",
+      "marketName": "판매자's Shop",
+      "categoryName": "상의",
+      "reviewCount": 10,
+      "ratingAvg": 4.5,
+      "saleCount": 3
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 12
+  },
+  "totalPages": 1,
+  "totalElements": 1,
+  "last": true,
+  "first": true
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| seq | Long | 상품 ID |
+| productName | String | 상품명 |
+| price | Integer | 정가 (원) |
+| salePrice | Integer | 판매가 (원) |
+| thumbnailUrl | String | 썸네일 이미지 URL |
+| marketName | String | 마켓명 |
+| categoryName | String | 카테고리명 |
+| reviewCount | Integer | 리뷰 수 |
+| ratingAvg | BigDecimal | 평균 평점 |
+| saleCount | Integer | 판매 수량 |
+
+---
+
+### 2. 상품 상세 조회
+
+```http
+GET /v1/products/{seq}
+```
+
+**Path Parameters**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| seq | Long | O | 상품 ID |
+
+**Response (200 OK)**:
+```json
+{
+  "seq": 1,
+  "productName": "기본 면 티셔츠",
+  "description": "편안한 착용감의 기본 면 티셔츠입니다",
+  "price": 29000,
+  "salePrice": 25000,
+  "stockQty": 100,
+  "minOrderQty": 1,
+  "maxOrderQty": 10,
+  "status": "ON_SALE",
+  "thumbnailUrl": "https://via.placeholder.com/400",
+  "imageUrls": [
+    "https://via.placeholder.com/400",
+    "https://via.placeholder.com/401"
+  ],
+  "marketName": "판매자's Shop",
+  "marketSeq": 1,
+  "categoryName": "상의",
+  "categoryCode": "FASHION_TOP",
+  "reviewCount": 10,
+  "ratingAvg": 4.5,
+  "viewCount": 15,
+  "saleCount": 3
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| seq | Long | 상품 ID |
+| productName | String | 상품명 |
+| description | String | 상품 설명 |
+| price | Integer | 정가 (원) |
+| salePrice | Integer | 판매가 (원) |
+| stockQty | Integer | 재고 수량 |
+| minOrderQty | Integer | 최소 주문 수량 |
+| maxOrderQty | Integer | 최대 주문 수량 |
+| status | String | 상품 상태 (ON_SALE, SOLD_OUT, HIDDEN) |
+| thumbnailUrl | String | 썸네일 이미지 URL |
+| imageUrls | List<String> | 상품 이미지 URL 목록 |
+| marketName | String | 마켓명 |
+| marketSeq | Long | 마켓 ID |
+| categoryName | String | 카테고리명 |
+| categoryCode | String | 카테고리 코드 |
+| reviewCount | Integer | 리뷰 수 |
+| ratingAvg | BigDecimal | 평균 평점 |
+| viewCount | Integer | 조회수 |
+| saleCount | Integer | 판매 수량 |
+
+> [!NOTE]
+> 상품 상세 조회 시 자동으로 조회수(viewCount)가 1 증가합니다.
+
+---
+
+## 주문 API (BUYER)
+
+> [!IMPORTANT]
+> 모든 주문 API는 **인증**이 필요합니다. (BUYER, USER, SELLER, ADMIN 권한)
+
+### 1. 주문 생성
+
+```http
+POST /v1/orders
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "items": [
+    {
+      "productSeq": 1,
+      "qty": 2
+    }
+  ],
+  "receiverName": "홍길동",
+  "receiverPhone": "010-1234-5678",
+  "zipCode": "06234",
+  "address1": "서울시 강남구 테헤란로 123",
+  "address2": "456호",
+  "shippingMessage": "부재 시 문 앞에 놓아주세요"
+}
+```
+
+**Request 필드**:
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| items | List | O | 주문 상품 목록 |
+| items[].productSeq | Long | O | 상품 ID |
+| items[].qty | Integer | O | 주문 수량 |
+| receiverName | String | O | 받는 사람 이름 |
+| receiverPhone | String | O | 받는 사람 전화번호 |
+| zipCode | String | O | 우편번호 |
+| address1 | String | O | 받는 주소 (기본) |
+| address2 | String | X | 상세 주소 |
+| shippingMessage | String | X | 배송 메모 |
+
+**Response (200 OK)**:
+```json
+{
+  "orderSeq": 1,
+  "orderNo": "ORD-20260222-0001",
+  "totalPayAmount": 58000,
+  "orderStatus": "PENDING"
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| totalPayAmount | Integer | 총 결제 금액 (원) |
+| orderStatus | String | 주문 상태 |
+
+> [!NOTE]
+> 주문 번호는 `ORD-YYYYMMDD-0001` 형식으로 자동 생성됩니다.
+
+---
+
+### 2. 내 주문 목록 조회
+
+```http
+GET /v1/orders?page=0&size=10&sort=orderedAt,desc
+Authorization: Bearer {access_token}
+```
+
+**Query Parameters**:
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|----------|------|------|--------|------|
+| page | Integer | X | 0 | 페이지 번호 (0부터 시작) |
+| size | Integer | X | 10 | 페이지 크기 |
+| sort | String | X | orderedAt,desc | 정렬 기준 (field,direction) |
+
+**Response (200 OK)**:
+```json
+{
+  "content": [
+    {
+      "orderSeq": 1,
+      "orderNo": "ORD-20260222-0001",
+      "orderStatus": "PENDING",
+      "totalPayAmount": 58000,
+      "marketName": "판매자's Shop",
+      "orderedAt": "2026-02-22T23:00:00",
+      "firstItemName": "기본 면 티셔츠",
+      "itemCount": 1
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 10
+  },
+  "totalPages": 1,
+  "totalElements": 1,
+  "last": true,
+  "first": true
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| orderStatus | String | 주문 상태 |
+| totalPayAmount | Integer | 총 결제 금액 (원) |
+| marketName | String | 마켓명 |
+| orderedAt | LocalDateTime | 주문 일시 |
+| firstItemName | String | 첫 번째 상품명 |
+| itemCount | Integer | 총 주문 상품 종류 수 |
+
+---
+
+### 3. 주문 상세 조회
+
+```http
+GET /v1/orders/{orderSeq}
+Authorization: Bearer {access_token}
+```
+
+**Path Parameters**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| orderSeq | Long | O | 주문 ID |
+
+**Response (200 OK)**:
+```json
+{
+  "orderSeq": 1,
+  "orderNo": "ORD-20260222-0001",
+  "orderStatus": "PENDING",
+  "totalProductAmount": 58000,
+  "totalDiscountAmount": 0,
+  "couponDiscountAmount": 0,
+  "shippingFee": 3000,
+  "totalPayAmount": 61000,
+  "receiverName": "홍길동",
+  "receiverPhone": "010-1234-5678",
+  "zipCode": "06234",
+  "address1": "서울시 강남구 테헤란로 123",
+  "address2": "456호",
+  "shippingMessage": "부재 시 문 앞에 놓아주세요",
+  "buyerName": "주문자",
+  "buyerEmail": "buyer@test.com",
+  "buyerPhone": "010-9999-8888",
+  "marketName": "판매자's Shop",
+  "orderedAt": "2026-02-22T23:00:00",
+  "confirmedAt": null,
+  "canceledAt": null,
+  "cancelReason": null,
+  "items": [
+    {
+      "seq": 1,
+      "productSeq": 1,
+      "itemName": "기본 면 티셔츠",
+      "itemOption": "Blue/XL",
+      "unitPrice": 29000,
+      "qty": 2,
+      "itemAmount": 58000,
+      "discountAmount": 0,
+      "itemStatus": "ORDERED",
+      "thumbnailUrl": "https://via.placeholder.com/400"
+    }
+  ]
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| orderStatus | String | 주문 상태 |
+| totalProductAmount | Integer | 원 상품 금액 합계 |
+| totalDiscountAmount | Integer | 총 할인 금액 |
+| couponDiscountAmount | Integer | 쿠폰 할인 금액 |
+| shippingFee | Integer | 배송비 |
+| totalPayAmount | Integer | 최종 결제 금액 |
+| receiverName | String | 받는 사람 이름 |
+| receiverPhone | String | 받는 사람 전화번호 |
+| zipCode | String | 우편번호 |
+| address1 | String | 받는 주소 (기본) |
+| address2 | String | 상세 주소 |
+| shippingMessage | String | 배송 메모 |
+| buyerName | String | 주문자 이름 |
+| buyerEmail | String | 주문자 이메일 |
+| buyerPhone | String | 주문자 전화번호 |
+| marketName | String | 마켓명 |
+| orderedAt | LocalDateTime | 주문 일시 |
+| confirmedAt | LocalDateTime | 주문 확정 일시 |
+| canceledAt | LocalDateTime | 주문 취소 일시 |
+| cancelReason | String | 취소 사유 |
+| items | List | 주문 상품 목록 |
+| items[].seq | Long | 주문 상품 항목 ID |
+| items[].productSeq | Long | 상품 ID |
+| items[].itemName | String | 상품명 |
+| items[].itemOption | String | 선택 옵션 |
+| items[].unitPrice | Integer | 단가 |
+| items[].qty | Integer | 수량 |
+| items[].itemAmount | Integer | 항목 금액 |
+| items[].discountAmount | Integer | 항목 할인 금액 |
+| items[].itemStatus | String | 항목 상태 |
+| items[].thumbnailUrl | String | 상품 썸네일 URL |
+
+> [!NOTE]
+> 본인의 주문만 조회 가능합니다. 다른 사용자의 주문을 조회하면 403 Forbidden 오류가 발생합니다.
+
+---
+
+### 4. 주문 취소
+
+```http
+POST /v1/orders/{orderSeq}/cancel
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+**Path Parameters**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| orderSeq | Long | O | 주문 ID |
+
+**Request Body** (선택):
+```json
+{
+  "reason": "단순 변심"
+}
+```
+
+**Response (200 OK)**
+
+> [!IMPORTANT]
+> - PENDING, CONFIRMED 상태의 주문만 취소 가능합니다.
+> - 취소 시 재고가 자동으로 복구됩니다.
+> - 결제가 완료된 경우 결제 취소 처리도 함께 진행됩니다.
+
+---
+
+## 결제 API (MOCK)
+
+> [!IMPORTANT]
+> 결제 API는 **인증**이 필요합니다. (BUYER, USER, SELLER, ADMIN 권한)
+>
+> 현재는 Mock 구현으로, 실제 PG사 연동은 추후 진행됩니다.
+
+### 1. 결제 요청
+
+```http
+POST /v1/payments
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "orderSeq": 1,
+  "payMethod": "CARD",
+  "payAmount": 58000,
+  "cardCompany": "SHINHAN",
+  "cardNumber": "1234-5678-****-****",
+  "installmentMonth": 0
+}
+```
+
+**Request 필드**:
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| orderSeq | Long | O | 주문 ID |
+| payMethod | String | O | 결제 수단 (CARD, TRANSFER, VBANK 등) |
+| payAmount | Integer | O | 결제 금액 (원) |
+| cardCompany | String | X | 카드사명 (카드 결제 시) |
+| cardNumber | String | X | 카드번호 (카드 결제 시) |
+| installmentMonth | Integer | X | 할부 개월 수 (0: 일시불) |
+
+**Response (200 OK)**:
+```json
+{
+  "paymentSeq": 1,
+  "orderSeq": 1,
+  "orderNo": "ORD-20260222-0001",
+  "payMethod": "CARD",
+  "payStatus": "PENDING",
+  "payAmount": 58000,
+  "pgProvider": "TOSS",
+  "pgTid": "tid_1234567890",
+  "cardCompany": "SHINHAN",
+  "cardNumber": "1234-5678-****-****",
+  "installmentMonth": 0,
+  "approvedAt": null,
+  "receiptUrl": "https://receipt.toss.im/..."
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| paymentSeq | Long | 결제 ID |
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| payMethod | String | 결제 수단 |
+| payStatus | String | 결제 상태 (PENDING, COMPLETED, FAILED, CANCELED) |
+| payAmount | Integer | 결제 금액 (원) |
+| pgProvider | String | PG사 정보 |
+| pgTid | String | PG사 거래고유번호 |
+| cardCompany | String | 카드사명 |
+| cardNumber | String | 카드번호 |
+| installmentMonth | Integer | 할부 개월 수 |
+| approvedAt | LocalDateTime | 결제 승인 일시 |
+| receiptUrl | String | 영수증 조회 URL |
+
+---
+
+### 2. 결제 확인 (승인)
+
+```http
+POST /v1/payments/{paymentSeq}/confirm
+Authorization: Bearer {access_token}
+```
+
+**Path Parameters**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| paymentSeq | Long | O | 결제 ID |
+
+**Response (200 OK)**:
+```json
+{
+  "paymentSeq": 1,
+  "orderSeq": 1,
+  "orderNo": "ORD-20260222-0001",
+  "payStatus": "COMPLETED",
+  "payAmount": 58000,
+  "approvedAt": "2026-02-22T23:06:00",
+  "message": "결제가 완료되었습니다."
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| paymentSeq | Long | 결제 ID |
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| payStatus | String | 결제 상태 (COMPLETED) |
+| payAmount | Integer | 결제 금액 |
+| approvedAt | LocalDateTime | 결제 확인 일시 |
+| message | String | 처리 결과 메시지 |
+
+> [!NOTE]
+> Mock 구현이므로 항상 성공합니다. 실제 PG사 연동 시 승인 실패 케이스도 처리됩니다.
+
+> [!TIP]
+> 결제 확인 시 주문 상태가 자동으로 CONFIRMED(결제완료)로 변경됩니다.
 
 ---
 

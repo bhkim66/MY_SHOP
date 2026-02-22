@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Order 엔티티용 Repository
@@ -63,4 +64,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             Long marketSeq,
             LocalDateTime startDate,
             LocalDateTime endDate);
+
+    /**
+     * 구매자별 주문 목록 조회 (페이징)
+     */
+    Page<Order> findByBuyerSeqOrderByOrderedAtDesc(Long buyerSeq, Pageable pageable);
+
+    /**
+     * 주문번호로 주문 조회
+     */
+    Optional<Order> findByOrderNo(String orderNo);
 }
