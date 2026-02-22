@@ -5,10 +5,14 @@ import com.my_shop.market.domain.entity.Market;
 import com.my_shop.member.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 @Entity
 @Table(name = "orders", indexes = {
@@ -18,7 +22,14 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class Order extends BaseEntity {
+
+    // 취소 가능한 상태 목록
+    private static final List<String> CANCELABLE_STATUSES = Arrays.asList(
+            "PENDING", "PAYMENT_COMPLETED", "PREPARING"
+    );
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -92,4 +103,68 @@ public class Order extends BaseEntity {
 
     @Column(name = "cancel_reason", length = 500)
     private String cancelReason;
+
+    /**
+     * 주문 생성 팩토리 메서드
+     */
+    public static Order create(String orderNo, Market market, User buyer,
+                               int totalProductAmount, int shippingFee, int totalPayAmount,
+                               String receiverName, String receiverPhone,
+                               String zipCode, String address1, String address2, String shippingMessage) {
+        return Order.builder()
+                .orderNo(orderNo)
+                .market(market)
+                .buyer(buyer)
+                .orderStatus("PENDING")
+                .totalProductAmount(totalProductAmount)
+                .totalDiscountAmount(0)
+                .couponDiscountAmount(0)
+                .shippingFee(shippingFee)
+                .totalPayAmount(totalPayAmount)
+                .receiverName(receiverName)
+                .receiverPhone(receiverPhone)
+                .zipCode(zipCode)
+                .address1(address1)
+                .address2(address2)
+                .shippingMessage(shippingMessage)
+                .buyerName(buyer.getName())
+                .buyerEmail(buyer.getEmail())
+                .buyerPhone(buyer.getPhone())
+                .orderedAt(LocalDateTime.now())
+                .build();
+    }
+
+    /**
+     * 결제 완료 처리
+     */
+    public void completePayment() {
+        this.orderStatus = "PAYMENT_COMPLETED";
+        this.confirmedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 주문 취소 가능 여부 확인
+     */
+    public boolean isCancelable() {
+        return CANCELABLE_STATUSES.contains(this.orderStatus);
+    }
+
+    /**
+     * 주문 취소
+     */
+    public void cancel(String reason) {
+        if (!isCancelable()) {
+            throw new RuntimeException("현재 상태에서는 주문을 취소할 수 없습니다. 현재 상태: " + this.orderStatus);
+        }
+        this.orderStatus = "CANCELED";
+        this.canceledAt = LocalDateTime.now();
+        this.cancelReason = reason;
+    }
+
+    /**
+     * 상태 변경
+     */
+    public void updateStatus(String newStatus) {
+        this.orderStatus = newStatus;
+    }
 }

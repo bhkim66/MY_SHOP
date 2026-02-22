@@ -171,4 +171,12 @@ public class Product extends BaseEntity {
     public void increaseSaleCount(int quantity) {
         this.saleCount += quantity;
     }
+
+    /**
+     * 재고 증가 (주문 취소 시)
+     */
+    public void increaseStock(int quantity) {
+        this.stockQty += quantity;
+        updateStatus();
+    }
 }

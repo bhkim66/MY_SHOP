@@ -60,7 +60,7 @@ public class SecurityConfig {
 
                                 // 로그인, 회원가입 API 는 토큰이 없는 상태에서 요청이 들어오기 때문에 permitAll 설정
                                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                                                .requestMatchers("/v1/auth/**", "/v1/members/signup", "/v1/categories/**")
+                                                .requestMatchers("/v1/auth/**", "/v1/members/signup", "/v1/categories/**", "/v1/products/**")
                                                 .permitAll()
                                                 .requestMatchers("/h2-console/**").permitAll()
                                                 .anyRequest().authenticated())

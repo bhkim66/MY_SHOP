@@ -4,6 +4,8 @@ import com.my_shop.common.entity.BaseEntity;
 import com.my_shop.order.domain.entity.Order;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +19,8 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class Payment extends BaseEntity {
 
     @Id
@@ -75,4 +79,47 @@ public class Payment extends BaseEntity {
 
     @Column(name = "receipt_url", length = 500)
     private String receiptUrl;
+
+    /**
+     * 결제 생성 팩토리 메서드
+     */
+    public static Payment create(Order order, String payMethod, int payAmount,
+                                  String cardCompany, String cardNumber, Integer installmentMonth) {
+        return Payment.builder()
+                .order(order)
+                .payMethod(payMethod)
+                .payStatus("PENDING")
+                .payAmount(payAmount)
+                .pgProvider("MOCK_PG")
+                .cardCompany(cardCompany)
+                .cardNumber(cardNumber)
+                .installmentMonth(installmentMonth)
+                .build();
+    }
+
+    /**
+     * 결제 승인
+     */
+    public void approve(String pgTid, String receiptUrl) {
+        this.payStatus = "APPROVED";
+        this.pgTid = pgTid;
+        this.receiptUrl = receiptUrl;
+        this.approvedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 결제 실패
+     */
+    public void fail(String reason) {
+        this.payStatus = "FAILED";
+        this.failReason = reason;
+    }
+
+    /**
+     * 결제 취소
+     */
+    public void cancel() {
+        this.payStatus = "CANCELED";
+        this.canceledAt = LocalDateTime.now();
+    }
 }
