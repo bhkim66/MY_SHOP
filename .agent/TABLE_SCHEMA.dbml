@@ -2,7 +2,7 @@
 // MVP 기능 + 확장 가능한 구조
 
 // ==================== 사용자 관리 ====================
-Table USER as U {
+Table users as U {
   SEQ integer [primary key, increment, note: "사용자 SEQ"]
   LOGIN_ID varchar(50) [not null, unique, note: "로그인 아이디"]
   PASSWORD varchar(255) [note: "비밀번호 (OAuth만 사용시 NULL)"]
@@ -239,21 +239,12 @@ Table ORDERS as O {
   ORDER_NO varchar(50) [not null, unique, note: "주문번호"]
   MARKET_SEQ integer [not null, ref: > M.SEQ, note: "마켓 SEQ"]
   BUYER_USER_SEQ integer [ref: > U.SEQ, note: "구매자 (비회원 NULL)"]
-  ORDER_STATUS varchar(20) [not null, default: "PENDING", note: "PENDING, CONFIRMED, PREPARING, SHIPPED, DELIVERED, CANCELED, REFUNDED"]
+  ORDER_STATUS varchar(20) [not null, default: "PENDING", note: "PENDING, CONFIRMED, PREPARING, SHIPPED, DELIVERED, CANCELED, REFUNDED", note: "주문 상태"]
   TOTAL_PRODUCT_AMOUNT integer [not null, note: "상품 합계(원)"]
   TOTAL_DISCOUNT_AMOUNT integer [not null, default: 0, note: "할인 합계(원)"]
   COUPON_DISCOUNT_AMOUNT integer [not null, default: 0, note: "쿠폰 할인(원)"]
   SHIPPING_FEE integer [not null, default: 0, note: "배송비(원)"]
   TOTAL_PAY_AMOUNT integer [not null, note: "최종 결제액(원)"]
-  RECEIVER_NAME varchar(50) [not null, note: "수령인"]
-  RECEIVER_PHONE varchar(20) [not null, note: "수령인 연락처"]
-  ZIP_CODE varchar(10) [note: "우편번호"]
-  ADDRESS1 varchar(200) [note: "주소1"]
-  ADDRESS2 varchar(200) [note: "주소2"]
-  SHIPPING_MESSAGE varchar(500) [note: "배송 메시지"]
-  BUYER_NAME varchar(50) [note: "주문자명 (비회원)"]
-  BUYER_EMAIL varchar(100) [note: "주문자 이메일 (비회원)"]
-  BUYER_PHONE varchar(20) [note: "주문자 연락처 (비회원)"]
   ORDERED_AT timestamp [not null, default: `now()`, note: "주문일시"]
   CONFIRMED_AT timestamp [note: "주문확정일시"]
   CANCELED_AT timestamp [note: "취소일시"]
@@ -268,6 +259,25 @@ Table ORDERS as O {
     (BUYER_USER_SEQ, ORDERED_AT)
     (MARKET_SEQ, ORDER_STATUS, ORDERED_AT)
     (ORDER_STATUS, ORDERED_AT)
+  }
+}
+
+Table USER_ORDER_REQ_INFO {
+  SEQ integer [primary key, increment]
+  ORDER_NO varchar(50) [not null, ref: > O.ORDER_NO, note: "주문번호"]
+  RECEIVER_NAME varchar(50) [not null, note: "수령인"]
+  RECEIVER_PHONE varchar(20) [not null, note: "수령인 연락처"]
+  ZIP_CODE varchar(10) [note: "우편번호"]
+  ADDRESS1 varchar(200) [note: "주소1"]
+  ADDRESS2 varchar(200) [note: "주소2"]
+  SHIPPING_MESSAGE varchar(500) [note: "배송 메시지"]
+  CREATED_AT timestamp [not null, default: `now()`, note: "생성일"]
+  CREATED_BY integer [not null, note: "생성자"]
+  UPDATED_AT timestamp [default: `now()`, note: "수정일"]
+  UPDATED_BY integer [note: "수정자"]
+  
+  indexes {
+    (ORDER_NO)
   }
 }
 

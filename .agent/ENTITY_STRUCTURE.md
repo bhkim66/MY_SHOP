@@ -4,14 +4,16 @@
 테이블 정의서(`TABLE_SCHEMA.dbml`)를 기반으로 작성되었습니다.
 
 ## 1. Common (공통)
-모든 도메인에서 공통으로 사용하는 기반 엔티티입니다.
+모든 도메인에서 공통으로 사용하는 기반 엔티티입니다. (util, interceptor, aop 등)
 - **`BaseTimeEntity`**: `createdAt`, `updatedAt` 등 시간 정보를 자동 관리합니다.
 - **`BaseEntity`** (`BaseTimeEntity` 상속): `createdBy`, `updatedBy` 등 생성/수정자 정보까지 포함하여 전체 감사(Audit) 기능을 제공합니다.
+- **`LoggingConfig`**: API 요청 시 Payload와 Query String을 로깅하여 개발 중 디버깅을 용이하게 합니다.
 
 ---
 
 ## 2. Member (회원)
-- **`User`** (`user`): 핵심 사용자 정보 (로그인 ID, 비밀번호, 이름, 상태 등).
+- **`User`** (`users`): 핵심 사용자 정보 (로그인 ID, 비밀번호, 이름, 상태 등).
+- **`RefreshToken`** (`refresh_token`): JWT 리프레시 토큰 저장 및 세션 관리.
 - **`UserSocialAccount`** (`user_social_accounts`): 소셜 로그인(Kakao, Google, Naver) 연동 정보.
 - **`UserAddress`** (`user_addresses`): 회원의 배송지 목록 관리.
 

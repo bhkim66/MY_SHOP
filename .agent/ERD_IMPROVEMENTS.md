@@ -2,7 +2,7 @@
 
 ### 1️⃣ 사용자 관리 강화
 **추가된 테이블:**
-- `USER` 테이블 개선
+- `users` 테이블 개선
   - EMAIL, PHONE 필드 추가 (인증 시스템 대비)
   - STATUS 추가 (ACTIVE, INACTIVE, SUSPENDED, WITHDRAWN)
   - EMAIL_VERIFIED, PHONE_VERIFIED 인증 상태 관리
