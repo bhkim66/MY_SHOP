@@ -1018,6 +1018,332 @@ Authorization: Bearer {access_token}
 
 ---
 
+### 2. 판매자 주문 목록 조회
+
+```http
+GET /v1/seller/orders?page=0&size=10&status=PAYMENT_COMPLETED&startDate=2026-02-01&endDate=2026-02-28
+Authorization: Bearer {access_token}
+```
+
+**Query Parameters**:
+| 파라미터 | 타입 | 필수 | 기본값 | 설명 |
+|----------|------|------|--------|------|
+| page | Integer | X | 0 | 페이지 번호 (0부터 시작) |
+| size | Integer | X | 10 | 페이지 크기 |
+| status | String | X | - | 주문 상태 필터 (PENDING, PAYMENT_COMPLETED, PREPARING, SHIPPING, DELIVERED, CANCELED) |
+| startDate | String | X | - | 주문 시작 날짜 (yyyy-MM-dd 형식) |
+| endDate | String | X | - | 주문 종료 날짜 (yyyy-MM-dd 형식) |
+
+**Response (200 OK)**:
+```json
+{
+  "content": [
+    {
+      "orderSeq": 1,
+      "orderNo": "ORD-20260215-001",
+      "orderStatus": "PAYMENT_COMPLETED",
+      "buyerName": "홍길동",
+      "buyerPhone": "010-1234-5678",
+      "totalPayAmount": 61000,
+      "orderedAt": "2026-02-15T21:00:00",
+      "firstItemName": "기본 면 티셔츠",
+      "itemCount": 2,
+      "shippingCompany": null,
+      "trackingNumber": null
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 10
+  },
+  "totalPages": 1,
+  "totalElements": 1,
+  "last": true,
+  "first": true
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| orderStatus | String | 주문 상태 |
+| buyerName | String | 구매자 이름 |
+| buyerPhone | String | 구매자 전화번호 |
+| totalPayAmount | Integer | 총 결제 금액 (원) |
+| orderedAt | LocalDateTime | 주문 일시 |
+| firstItemName | String | 첫 번째 상품명 |
+| itemCount | Integer | 총 주문 상품 종류 수 |
+| shippingCompany | String | 배송 회사명 (배송 중일 경우) |
+| trackingNumber | String | 운송장 번호 (배송 중일 경우) |
+
+> [!NOTE]
+> 본인의 마켓에 속한 주문만 조회됩니다.
+
+> [!TIP]
+> 날짜 필터 사용 시 startDate와 endDate를 모두 지정하는 것을 권장합니다.
+
+---
+
+### 3. 판매자 주문 상세 조회
+
+```http
+GET /v1/seller/orders/{orderSeq}
+Authorization: Bearer {access_token}
+```
+
+**Path Parameters**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| orderSeq | Long | O | 주문 ID |
+
+**Response (200 OK)**:
+```json
+{
+  "orderSeq": 1,
+  "orderNo": "ORD-20260215-001",
+  "orderStatus": "PAYMENT_COMPLETED",
+  "totalProductAmount": 58000,
+  "totalDiscountAmount": 0,
+  "couponDiscountAmount": 0,
+  "shippingFee": 3000,
+  "totalPayAmount": 61000,
+  "receiverName": "홍길동",
+  "receiverPhone": "010-1234-5678",
+  "zipCode": "06234",
+  "address1": "서울시 강남구 테헤란로 123",
+  "address2": "456호",
+  "shippingMessage": "부재 시 문 앞에 놓아주세요",
+  "buyerName": "주문자",
+  "buyerEmail": "buyer@test.com",
+  "buyerPhone": "010-9999-8888",
+  "orderedAt": "2026-02-15T21:00:00",
+  "paymentCompletedAt": "2026-02-15T21:05:00",
+  "shippingStartedAt": null,
+  "deliveredAt": null,
+  "canceledAt": null,
+  "cancelReason": null,
+  "shippingCompany": null,
+  "trackingNumber": null,
+  "items": [
+    {
+      "seq": 1,
+      "productSeq": 1,
+      "productName": "기본 면 티셔츠",
+      "itemOption": "Blue/XL",
+      "unitPrice": 29000,
+      "qty": 2,
+      "itemAmount": 58000,
+      "discountAmount": 0,
+      "thumbnailUrl": "https://via.placeholder.com/400"
+    }
+  ]
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| orderStatus | String | 주문 상태 |
+| totalProductAmount | Integer | 원 상품 금액 합계 |
+| totalDiscountAmount | Integer | 총 할인 금액 |
+| couponDiscountAmount | Integer | 쿠폰 할인 금액 |
+| shippingFee | Integer | 배송비 |
+| totalPayAmount | Integer | 최종 결제 금액 |
+| receiverName | String | 받는 사람 이름 |
+| receiverPhone | String | 받는 사람 전화번호 |
+| zipCode | String | 우편번호 |
+| address1 | String | 받는 주소 (기본) |
+| address2 | String | 상세 주소 |
+| shippingMessage | String | 배송 메모 |
+| buyerName | String | 주문자 이름 |
+| buyerEmail | String | 주문자 이메일 |
+| buyerPhone | String | 주문자 전화번호 |
+| orderedAt | LocalDateTime | 주문 일시 |
+| paymentCompletedAt | LocalDateTime | 결제 완료 일시 |
+| shippingStartedAt | LocalDateTime | 배송 시작 일시 |
+| deliveredAt | LocalDateTime | 배송 완료 일시 |
+| canceledAt | LocalDateTime | 주문 취소 일시 |
+| cancelReason | String | 취소 사유 |
+| shippingCompany | String | 배송 회사명 |
+| trackingNumber | String | 운송장 번호 |
+| items | List | 주문 상품 목록 |
+| items[].seq | Long | 주문 상품 항목 ID |
+| items[].productSeq | Long | 상품 ID |
+| items[].productName | String | 상품명 |
+| items[].itemOption | String | 선택 옵션 |
+| items[].unitPrice | Integer | 단가 |
+| items[].qty | Integer | 수량 |
+| items[].itemAmount | Integer | 항목 금액 |
+| items[].discountAmount | Integer | 항목 할인 금액 |
+| items[].thumbnailUrl | String | 상품 썸네일 URL |
+
+> [!IMPORTANT]
+> 본인의 마켓에 속한 주문만 조회 가능합니다. 다른 판매자의 주문을 조회하면 403 Forbidden 오류가 발생합니다.
+
+---
+
+### 4. 주문 상태 변경
+
+```http
+PATCH /v1/seller/orders/{orderSeq}/status
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+**Path Parameters**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| orderSeq | Long | O | 주문 ID |
+
+**Request Body (일반 상태 변경)**:
+```json
+{
+  "status": "PREPARING",
+  "reason": "주문 확인 완료"
+}
+```
+
+**Request Body (배송 시작 시)**:
+```json
+{
+  "status": "SHIPPING",
+  "shippingCompany": "CJ대한통운",
+  "trackingNumber": "123456789012"
+}
+```
+
+**Request 필드**:
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| status | String | O | 변경할 주문 상태 (PREPARING, SHIPPING, DELIVERED, CANCELED) |
+| reason | String | X | 상태 변경 사유 |
+| shippingCompany | String | O* | 배송 회사명 (status가 SHIPPING일 때 필수) |
+| trackingNumber | String | O* | 운송장 번호 (status가 SHIPPING일 때 필수) |
+
+**Response (200 OK)**:
+```json
+{
+  "orderSeq": 1,
+  "orderNo": "ORD-20260215-001",
+  "orderStatus": "PREPARING",
+  "message": "주문 상태가 변경되었습니다."
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| orderStatus | String | 변경된 주문 상태 |
+| message | String | 처리 결과 메시지 |
+
+**주문 상태 전환 규칙**:
+```
+PAYMENT_COMPLETED → PREPARING (상품 준비 중)
+PREPARING → SHIPPING (배송 시작)
+SHIPPING → DELIVERED (배송 완료)
+모든 상태 → CANCELED (주문 취소)
+```
+
+> [!IMPORTANT]
+> - SHIPPING 상태로 변경 시 배송 정보(shippingCompany, trackingNumber)는 필수입니다.
+> - 주문 상태 전환 규칙을 위반하면 400 Bad Request 오류가 발생합니다.
+> - 이미 취소되거나 완료된 주문은 상태 변경이 불가능합니다.
+
+> [!NOTE]
+> 주문 취소 시 재고가 자동으로 복구되며, 결제 취소 처리도 함께 진행됩니다.
+
+**에러 케이스**:
+| 상황 | 상태 코드 | 메시지 |
+|------|-----------|--------|
+| 본인 마켓 주문이 아님 | 403 | 해당 주문에 대한 권한이 없습니다 |
+| 잘못된 상태 전환 | 400 | 현재 주문 상태에서 해당 상태로 변경할 수 없습니다 |
+| SHIPPING 시 배송정보 누락 | 400 | 배송 시작 시 배송 회사와 운송장 번호는 필수입니다 |
+| 이미 취소된 주문 | 400 | 이미 취소된 주문입니다 |
+| 주문을 찾을 수 없음 | 404 | 주문을 찾을 수 없습니다 |
+
+---
+
+### 5. 배송 정보 등록
+
+```http
+POST /v1/seller/orders/{orderSeq}/shipment
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+**Path Parameters**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| orderSeq | Long | O | 주문 ID |
+
+**Request Body**:
+```json
+{
+  "shippingCompany": "CJ대한통운",
+  "trackingNumber": "123456789012"
+}
+```
+
+**Request 필드**:
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| shippingCompany | String | O | 배송 회사명 (CJ대한통운, 우체국택배, 로젠택배 등) |
+| trackingNumber | String | O | 운송장 번호 (숫자 12자리 이상) |
+
+**Response (200 OK)**:
+```json
+{
+  "orderSeq": 1,
+  "orderNo": "ORD-20260215-001",
+  "shippingCompany": "CJ대한통운",
+  "trackingNumber": "123456789012",
+  "orderStatus": "SHIPPING",
+  "message": "배송 정보가 등록되었습니다."
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| orderSeq | Long | 주문 ID |
+| orderNo | String | 주문 번호 |
+| shippingCompany | String | 배송 회사명 |
+| trackingNumber | String | 운송장 번호 |
+| orderStatus | String | 주문 상태 (SHIPPING으로 자동 변경) |
+| message | String | 처리 결과 메시지 |
+
+> [!TIP]
+> 배송 정보 등록 시 주문 상태가 자동으로 SHIPPING으로 변경됩니다.
+
+> [!NOTE]
+> 이미 배송 정보가 등록된 주문의 경우, 기존 정보가 업데이트됩니다.
+
+**에러 케이스**:
+| 상황 | 상태 코드 | 메시지 |
+|------|-----------|--------|
+| 본인 마켓 주문이 아님 | 403 | 해당 주문에 대한 권한이 없습니다 |
+| 배송 정보 등록 불가 상태 | 400 | 배송 정보를 등록할 수 없는 주문 상태입니다 |
+| 운송장 번호 형식 오류 | 400 | 올바른 운송장 번호를 입력해주세요 |
+| 주문을 찾을 수 없음 | 404 | 주문을 찾을 수 없습니다 |
+
+**주요 배송 회사 목록**:
+- CJ대한통운
+- 우체국택배
+- 로젠택배
+- 한진택배
+- 롯데택배
+- 대한통운
+- 경동택배
+- 일양로지스
+
+---
+
 ## 에러 코드
 
 ### HTTP 상태 코드

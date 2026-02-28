@@ -2,6 +2,8 @@ package com.my_shop.order.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,6 +17,8 @@ import java.time.LocalDateTime;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class OrderStatusHistory {
 
@@ -42,4 +46,18 @@ public class OrderStatusHistory {
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
+
+    /**
+     * 주문 상태 이력 생성 팩토리 메서드
+     */
+    public static OrderStatusHistory create(Order order, String previousStatus, String newStatus,
+                                           Long changedBy, String changedReason) {
+        return OrderStatusHistory.builder()
+                .order(order)
+                .previousStatus(previousStatus)
+                .newStatus(newStatus)
+                .changedBy(changedBy)
+                .changedReason(changedReason)
+                .build();
+    }
 }
