@@ -1,4 +1,4 @@
-package com.my_shop.product.interfaces.dto;
+package com.my_shop.seller.interfaces.dto;
 
 import com.my_shop.product.domain.entity.Product;
 import com.my_shop.product.domain.entity.ProductImage;

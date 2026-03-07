@@ -18,9 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configurers.provisioning.InMemoryUserDetailsManagerConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -46,7 +45,7 @@ class MemberServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private AuthenticationManagerBuilder authenticationManagerBuilder;
+    private AuthenticationManager authenticationManager;
 
     @Mock
     private JwtTokenProvider jwtTokenProvider;
@@ -114,10 +113,7 @@ class MemberServiceTest {
             ReflectionTestUtils.setField(request, "password", "password123!");
 
             Authentication authentication = mock(Authentication.class);
-            org.springframework.security.authentication.AuthenticationManager authenticationManager = mock(
-                    org.springframework.security.authentication.AuthenticationManager.class);
 
-            given(authenticationManagerBuilder.getObject()).willReturn(authenticationManager);
             given(authenticationManager.authenticate(any())).willReturn(authentication);
 
             TokenDto tokenDto = TokenDto.builder()

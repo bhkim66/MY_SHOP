@@ -15,8 +15,8 @@ import com.my_shop.member.interfaces.dto.MemberRegisterRequest;
 import com.my_shop.member.interfaces.dto.MemberResponse;
 import com.my_shop.member.interfaces.dto.TokenRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class MemberService {
     private final UserRepository userRepository;
     private final MarketRepository marketRepository; // Market 생성용 (아직 없을 수 있음, 확인 필요)
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
 
@@ -75,16 +75,18 @@ public class MemberService {
         // 2. 실제로 검증 (사용자 비밀번호 체크) 이 이루어지는 부분
         // authenticate 메서드가 실행이 될 때 CustomUserDetailsService 에서 만들었던 loadUserByUsername
         // 메서드가 실행됨
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
         TokenDto tokenDto = jwtTokenProvider.generateTokenDto(authentication);
 
-        // 4. RefreshToken 저장
-        RefreshToken refreshToken = RefreshToken.builder()
-                .key(authentication.getName())
-                .value(tokenDto.getRefreshToken())
-                .build();
+        // 4. RefreshToken 저장 (기존 토큰이 있으면 업데이트, 없으면 새로 생성)
+        RefreshToken refreshToken = refreshTokenRepository.findByKey(authentication.getName())
+                .map(token -> token.updateValue(tokenDto.getRefreshToken()))
+                .orElse(RefreshToken.builder()
+                        .key(authentication.getName())
+                        .value(tokenDto.getRefreshToken())
+                        .build());
 
         refreshTokenRepository.save(refreshToken);
 

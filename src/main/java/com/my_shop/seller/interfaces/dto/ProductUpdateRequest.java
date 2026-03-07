@@ -1,4 +1,4 @@
-package com.my_shop.product.interfaces.dto;
+package com.my_shop.seller.interfaces.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,8 +10,8 @@ import lombok.Setter;
 public class ProductUpdateRequest {
 
     private String productName;
-    private Integer price;
     private String description;
+    private Integer price;
     private Integer stockQty;
-    private String status; // ON_SALE, SOLD_OUT, HIDDEN
+    private String status;
 }

@@ -74,4 +74,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * 주문번호로 주문 조회
      */
     Optional<Order> findByOrderNo(String orderNo);
+
+    /**
+     * Market별 주문 조회 - 상태 필터링 (페이징)
+     */
+    Page<Order> findByMarketSeqAndOrderStatus(Long marketSeq, String orderStatus, Pageable pageable);
+
+    /**
+     * Market별 주문 조회 - 기간 필터링 (페이징)
+     */
+    Page<Order> findByMarketSeqAndOrderedAtBetween(Long marketSeq, LocalDateTime startDate,
+                                                    LocalDateTime endDate, Pageable pageable);
+
+    /**
+     * Market별 주문 조회 - 상태 & 기간 필터링 (페이징)
+     */
+    Page<Order> findByMarketSeqAndOrderStatusAndOrderedAtBetween(Long marketSeq, String orderStatus,
+                                                                  LocalDateTime startDate, LocalDateTime endDate,
+                                                                  Pageable pageable);
 }

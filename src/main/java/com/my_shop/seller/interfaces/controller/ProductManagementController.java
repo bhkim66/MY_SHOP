@@ -1,10 +1,11 @@
-package com.my_shop.product.interfaces.controller;
+package com.my_shop.seller.interfaces.controller;
 
 import com.my_shop.common.service.FileStorageService;
 import com.my_shop.product.application.ProductService;
-import com.my_shop.product.interfaces.dto.ProductCreateRequest;
-import com.my_shop.product.interfaces.dto.ProductResponse;
-import com.my_shop.product.interfaces.dto.ProductUpdateRequest;
+import com.my_shop.seller.interfaces.dto.ProductCreateRequest;
+import com.my_shop.seller.interfaces.dto.ProductResponse;
+import com.my_shop.seller.interfaces.dto.ProductSearchRequest;
+import com.my_shop.seller.interfaces.dto.ProductUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,13 +20,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * 판매자(SELLER) 전용 상품 관리 Controller
+ * SELLER 상품 관리 컨트롤러
  */
 @RestController
 @RequestMapping("/v1/seller/products")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('SELLER')")
-public class ProductController {
+public class ProductManagementController {
 
     private final ProductService productService;
     private final FileStorageService fileStorageService;
@@ -85,9 +86,10 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<Page<ProductResponse>> getMyProducts(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails,
+            ProductSearchRequest condition) {
         Long sellerSeq = Long.parseLong(userDetails.getUsername());
-        Page<ProductResponse> response = productService.getMyProducts(sellerSeq, pageable);
+        Page<ProductResponse> response = productService.getMyProducts(sellerSeq, pageable, condition);
         return ResponseEntity.ok(response);
     }
 
