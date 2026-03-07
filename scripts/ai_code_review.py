@@ -32,6 +32,12 @@ def analyze_java_code(file_content, file_path):
    - 느슨한 결합과 높은 응집도 확인
    - 불필요한 의존성이나 강한 결합 지적
 
+   **DIP 분석 시 중요한 Spring/JPA 패턴 주의사항**:
+   - Spring Data JPA의 Repository 인터페이스(`JpaRepository`, `CrudRepository`, `PagingAndSortingRepository` 등을 상속한 인터페이스)는 이미 인터페이스이므로 DIP를 준수하고 있음. 이를 DIP 위반으로 지적하지 말 것.
+   - `@Repository` 어노테이션이 붙은 인터페이스, 또는 이름이 `~Repository`로 끝나는 인터페이스는 Spring Data JPA 패턴임을 인지할 것.
+   - `@Service`, `@Component` 빈에 주입 시 인터페이스 타입으로 주입되는 경우는 DIP 준수로 판단할 것.
+   - DIP 위반으로 지적할 실제 케이스: 구체 클래스(예: `new 구현체()` 직접 생성, 인터페이스 없이 구체 Service 클래스에 직접 의존)를 주입받는 경우만 해당함.
+
 3. **SQL 쿼리 성능**:
    - N+1 쿼리 문제 가능성
    - 인덱스 누락 가능성이 있는 WHERE 조건
