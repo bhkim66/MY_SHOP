@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * SELLER 주문 관리 컸트롤러
+ * SELLER 주문 관리 컨트롤러
  */
 @RestController
 @RequestMapping("/v1/seller/orders")
@@ -48,10 +48,10 @@ public class OrderController {
     /**
      * 판매자 주문 목록 조회 (페이징, 필터링)
      *
-     * @param status 주문 상태 필터 (선택)
+     * @param status    주문 상태 필터 (선택)
      * @param startDate 시작 날짜 (선택)
-     * @param endDate 종료 날짜 (선택)
-     * @param pageable 페이징 정보
+     * @param endDate   종료 날짜 (선택)
+     * @param pageable  페이징 정보
      * @return 주문 목록 (페이징)
      */
     @GetMapping
@@ -83,7 +83,7 @@ public class OrderController {
      * 주문 상태 변경
      *
      * @param orderSeq 주문 ID
-     * @param request 상태 변경 요청
+     * @param request  상태 변경 요청
      * @return 성공 응답
      */
     @PatchMapping("/{orderSeq}/status")
@@ -98,8 +98,7 @@ public class OrderController {
                 request.getStatus(),
                 request.getReason(),
                 request.getShippingCompany(),
-                request.getTrackingNumber()
-        );
+                request.getTrackingNumber());
         return ResponseEntity.ok().build();
     }
 
@@ -107,7 +106,7 @@ public class OrderController {
      * 배송 정보 등록/수정
      *
      * @param orderSeq 주문 ID
-     * @param request 배송 정보 요청
+     * @param request  배송 정보 요청
      * @return 성공 응답
      */
     @PostMapping("/{orderSeq}/shipment")
@@ -120,8 +119,7 @@ public class OrderController {
                 sellerSeq,
                 orderSeq,
                 request.getShippingCompany(),
-                request.getTrackingNumber()
-        );
+                request.getTrackingNumber());
         return ResponseEntity.ok().build();
     }
 

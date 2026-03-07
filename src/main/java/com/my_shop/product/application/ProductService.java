@@ -8,9 +8,10 @@ import com.my_shop.product.domain.entity.ProductImage;
 import com.my_shop.product.infrastructure.CategoryRepository;
 import com.my_shop.product.infrastructure.ProductImageRepository;
 import com.my_shop.product.infrastructure.ProductRepository;
-import com.my_shop.product.interfaces.dto.ProductCreateRequest;
-import com.my_shop.product.interfaces.dto.ProductResponse;
-import com.my_shop.product.interfaces.dto.ProductUpdateRequest;
+import com.my_shop.seller.interfaces.dto.ProductCreateRequest;
+import com.my_shop.seller.interfaces.dto.ProductResponse;
+import com.my_shop.seller.interfaces.dto.ProductSearchRequest;
+import com.my_shop.seller.interfaces.dto.ProductUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -136,17 +137,27 @@ public class ProductService {
 
     /**
      * 내 상품 목록 조회 (SELLER 전용, 페이징)
+     *
+     * @param condition
      */
     @Transactional(readOnly = true)
-    public Page<ProductResponse> getMyProducts(Long sellerSeq, Pageable pageable) {
+    public Page<ProductResponse> getMyProducts(Long sellerSeq, Pageable pageable, ProductSearchRequest condition) {
         // SELLER의 Market 조회
         Market market = marketRepository.findAll().stream()
                 .filter(m -> m.getOwner().getSeq().equals(sellerSeq))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("판매자의 마켓 정보가 없습니다."));
 
+        // 검색 조건 파싱
+        String productName = (condition != null) ? condition.getProductName() : null;
+        String status = (condition != null) ? condition.getStatus() : null;
+        Long categorySeq = null;
+        if (condition != null && condition.getCategorySeq() != null && !condition.getCategorySeq().isEmpty()) {
+            categorySeq = Long.parseLong(condition.getCategorySeq());
+        }
+
         // Market의 상품 목록 조회
-        Page<Product> productsPage = productRepository.findByMarket(market, pageable);
+        Page<Product> productsPage = productRepository.searchByCondition(market, productName, status, categorySeq, pageable);
 
         // ProductResponse로 변환
         return productsPage.map(product -> {
