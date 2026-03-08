@@ -31,7 +31,7 @@ public class BuyerProductController {
      * 상품 상세 조회 (공개 API)
      */
     @GetMapping("/{seq}")
-    public ResponseEntity<BuyerProductDetailResponse> getProductDetail(@PathVariable Long seq) {
+    public ResponseEntity<BuyerProductDetailResponse> getProductDetail(@PathVariable("seq") Long seq) {
         return ResponseEntity.ok(buyerProductService.getProductDetail(seq));
     }
 }

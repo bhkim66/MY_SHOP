@@ -36,7 +36,7 @@ public class PaymentController {
      */
     @PostMapping("/{paymentSeq}/confirm")
     public ResponseEntity<PaymentConfirmResponse> confirmPayment(
-            @PathVariable Long paymentSeq,
+            @PathVariable("paymentSeq") Long paymentSeq,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long buyerSeq = Long.parseLong(userDetails.getUsername());
         return ResponseEntity.ok(paymentService.confirmPayment(paymentSeq, buyerSeq));

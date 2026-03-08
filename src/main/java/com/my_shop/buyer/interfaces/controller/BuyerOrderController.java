@@ -51,7 +51,7 @@ public class BuyerOrderController {
      */
     @GetMapping("/{orderSeq}")
     public ResponseEntity<OrderDetailResponse> getOrderDetail(
-            @PathVariable Long orderSeq,
+            @PathVariable("orderSeq") Long orderSeq,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long buyerSeq = Long.parseLong(userDetails.getUsername());
         return ResponseEntity.ok(buyerOrderService.getOrderDetail(orderSeq, buyerSeq));
@@ -62,7 +62,7 @@ public class BuyerOrderController {
      */
     @PostMapping("/{orderSeq}/cancel")
     public ResponseEntity<Void> cancelOrder(
-            @PathVariable Long orderSeq,
+            @PathVariable("orderSeq") Long orderSeq,
             @RequestBody(required = false) Map<String, String> body,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long buyerSeq = Long.parseLong(userDetails.getUsername());
