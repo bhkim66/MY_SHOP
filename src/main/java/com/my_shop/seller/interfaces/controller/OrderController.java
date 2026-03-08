@@ -56,9 +56,9 @@ public class OrderController {
      */
     @GetMapping
     public ResponseEntity<Page<OrderListResponse>> getOrders(
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @PageableDefault(size = 20, sort = "orderedAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Long sellerSeq = getSellerSeq();
@@ -73,7 +73,7 @@ public class OrderController {
      * @return 주문 상세 정보
      */
     @GetMapping("/{orderSeq}")
-    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable Long orderSeq) {
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable("orderSeq") Long orderSeq) {
         Long sellerSeq = getSellerSeq();
         OrderDetailResponse orderDetail = orderService.getOrderDetail(sellerSeq, orderSeq);
         return ResponseEntity.ok(orderDetail);
@@ -88,7 +88,7 @@ public class OrderController {
      */
     @PatchMapping("/{orderSeq}/status")
     public ResponseEntity<Void> updateOrderStatus(
-            @PathVariable Long orderSeq,
+            @PathVariable("orderSeq") Long orderSeq,
             @Valid @RequestBody OrderStatusUpdateRequest request) {
 
         Long sellerSeq = getSellerSeq();
@@ -111,7 +111,7 @@ public class OrderController {
      */
     @PostMapping("/{orderSeq}/shipment")
     public ResponseEntity<Void> registerOrUpdateShipment(
-            @PathVariable Long orderSeq,
+            @PathVariable("orderSeq") Long orderSeq,
             @Valid @RequestBody ShipmentRequest request) {
 
         Long sellerSeq = getSellerSeq();

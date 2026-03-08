@@ -48,7 +48,7 @@ public class ProductManagementController {
      */
     @PutMapping("/{productSeq}")
     public ResponseEntity<ProductResponse> updateProduct(
-            @PathVariable Long productSeq,
+            @PathVariable("productSeq") Long productSeq,
             @RequestBody ProductUpdateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long sellerSeq = Long.parseLong(userDetails.getUsername());
@@ -61,7 +61,7 @@ public class ProductManagementController {
      */
     @DeleteMapping("/{productSeq}")
     public ResponseEntity<Void> deleteProduct(
-            @PathVariable Long productSeq,
+            @PathVariable("productSeq") Long productSeq,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long sellerSeq = Long.parseLong(userDetails.getUsername());
         productService.deleteProduct(productSeq, sellerSeq);
@@ -73,7 +73,7 @@ public class ProductManagementController {
      */
     @GetMapping("/{productSeq}")
     public ResponseEntity<ProductResponse> getMyProduct(
-            @PathVariable Long productSeq,
+            @PathVariable("productSeq") Long productSeq,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long sellerSeq = Long.parseLong(userDetails.getUsername());
         ProductResponse response = productService.getMyProduct(productSeq, sellerSeq);
@@ -98,7 +98,7 @@ public class ProductManagementController {
      */
     @PostMapping("/{productSeq}/images")
     public ResponseEntity<String> uploadProductImage(
-            @PathVariable Long productSeq,
+            @PathVariable("productSeq") Long productSeq,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "imageType", defaultValue = "DETAIL") String imageType,
             @AuthenticationPrincipal UserDetails userDetails) {

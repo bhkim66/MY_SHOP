@@ -162,6 +162,104 @@
 - **N+1 문제**: `fetchJoin`을 적절히 사용하여 불필요한 쿼리 발생을 막습니다.
 - **Pagination**: 대량 데이터 조회 시 반드시 Pageable을 사용합니다.
 
+### **6.5 Controller 어노테이션 규칙**
+`@PathVariable`, `@RequestParam` 사용 시 **반드시 name 속성을 명시**해야 합니다.
+컴파일러 `-parameters` 옵션이 없는 환경에서 파라미터 이름을 찾지 못해 런타임 에러가 발생합니다.
+
+```java
+// ❌ 잘못된 예시 (name 생략)
+@PathVariable Long orderSeq
+@RequestParam(required = false) String status
+
+// ✅ 올바른 예시 (name 명시)
+@PathVariable("orderSeq") Long orderSeq
+@RequestParam(name = "status", required = false) String status
+```
+
+---
+
+## 7. 예외 처리 (Exception Handling)
+
+### **7.1 예외 처리 구조**
+
+프로젝트는 체계적인 예외 관리를 위해 `com.my_shop.common.exception` 패키지에서 통합 관리합니다.
+
+```
+com.my_shop.common.exception/
+├── ErrorCode.java              # 에러 코드 enum (HTTP 상태, 코드, 메시지)
+├── ErrorResponse.java          # API 에러 응답 DTO
+├── BusinessException.java      # 비즈니스 예외 기본 클래스
+├── EntityNotFoundException.java # 엔티티 조회 실패 예외
+├── AccessDeniedException.java   # 접근 권한 없음 예외
+├── InvalidValueException.java   # 유효하지 않은 값 예외
+└── GlobalExceptionHandler.java  # 전역 예외 처리 핸들러
+```
+
+### **7.2 ErrorCode 정의**
+
+모든 에러는 `ErrorCode` enum으로 정의하며, HTTP 상태 코드/에러 코드/메시지를 포함합니다.
+
+| 카테고리 | 코드 | HTTP 상태 | 설명 |
+|---------|------|-----------|------|
+| 공통 | C001~C005 | 400, 404, 405, 500 | 입력값 오류, 엔티티 없음, 서버 오류 |
+| 인증 | A001~A005 | 401, 403 | 인증 필요, 토큰 만료, 로그인 실패 |
+| 회원 | M001~M003 | 400, 404, 409 | 사용자 없음, 이메일 중복 |
+| 마켓 | MK001~MK002 | 403, 404 | 마켓 없음, 접근 권한 없음 |
+| 상품 | P001~P003 | 400, 403, 404 | 상품 없음, 재고 부족 |
+| 주문 | O001~O005 | 400, 403, 404 | 주문 없음, 취소 불가, 상태 전환 오류 |
+| 결제 | PM001~PM003 | 400, 404 | 결제 실패, 금액 불일치 |
+| 배송 | S001~S002 | 400, 404 | 배송 정보 없음/필수 |
+
+### **7.3 예외 클래스 사용법**
+
+```java
+// 엔티티 조회 실패
+throw new EntityNotFoundException(ErrorCode.ORDER_NOT_FOUND);
+throw new EntityNotFoundException("주문", orderSeq);
+
+// 접근 권한 없음
+throw new AccessDeniedException(ErrorCode.ORDER_ACCESS_DENIED);
+throw new AccessDeniedException("해당 주문");
+
+// 유효하지 않은 값
+throw new InvalidValueException(ErrorCode.INVALID_STATUS_TRANSITION,
+    "현재 상태: " + currentStatus + " → " + newStatus);
+
+// 일반 비즈니스 예외
+throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, "재고가 부족합니다.");
+```
+
+### **7.4 API 에러 응답 형식**
+
+모든 에러 응답은 `ErrorResponse` DTO를 통해 일관된 형식으로 반환됩니다.
+
+```json
+{
+  "timestamp": "2024-03-08T21:45:00",
+  "status": 404,
+  "code": "O001",
+  "message": "주문을 찾을 수 없습니다. ID: 123",
+  "errors": [
+    {
+      "field": "email",
+      "value": "invalid",
+      "reason": "이메일 형식이 올바르지 않습니다."
+    }
+  ]
+}
+```
+
+### **7.5 GlobalExceptionHandler 처리 순서**
+
+1. `BusinessException` 및 하위 예외 (커스텀 비즈니스 예외)
+2. `MethodArgumentNotValidException` (@Valid 검증 실패)
+3. `BindException` (@ModelAttribute 바인딩 실패)
+4. `MethodArgumentTypeMismatchException` (타입 불일치)
+5. `BadCredentialsException` (인증 실패)
+6. `AccessDeniedException` (권한 없음)
+7. `RuntimeException` (기타 런타임 예외)
+8. `Exception` (모든 예외 - 최후의 방어선)
+
 ---
 > [!IMPORTANT]
 > DB 구조 변경 시 반드시 관련 도메인 로직을 수정하고 ERD를 업데이트해야 합니다.
