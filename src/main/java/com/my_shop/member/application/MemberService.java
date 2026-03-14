@@ -2,7 +2,6 @@ package com.my_shop.member.application;
 
 import com.my_shop.common.security.JwtTokenProvider;
 import com.my_shop.common.security.TokenDto;
-import com.my_shop.common.security.CustomUserDetailsService;
 import com.my_shop.market.domain.entity.Market;
 import com.my_shop.market.infrastructure.MarketRepository;
 import com.my_shop.member.domain.entity.MemberRole;
