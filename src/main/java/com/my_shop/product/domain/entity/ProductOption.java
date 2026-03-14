@@ -48,4 +48,18 @@ public class ProductOption extends BaseEntity {
 
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
+
+    public static ProductOption create(Product product, String optionGroup, String optionValue,
+                                       int additionalPrice, int stockQty, int sortOrder) {
+        return ProductOption.builder()
+                .product(product)
+                .optionGroup(optionGroup)
+                .optionName(optionValue)
+                .optionValue(optionValue)
+                .additionalPrice(additionalPrice)
+                .stockQty(stockQty)
+                .status("ACTIVE")
+                .sortOrder(sortOrder)
+                .build();
+    }
 }
