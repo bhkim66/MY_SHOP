@@ -28,8 +28,7 @@ public class Order extends BaseEntity {
 
     // 취소 가능한 상태 목록
     private static final List<String> CANCELABLE_STATUSES = Arrays.asList(
-            "PENDING", "PAYMENT_COMPLETED", "PREPARING"
-    );
+            "PENDING", "PAYMENT_COMPLETED", "PREPARING");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -108,9 +107,9 @@ public class Order extends BaseEntity {
      * 주문 생성 팩토리 메서드
      */
     public static Order create(String orderNo, Market market, User buyer,
-                               int totalProductAmount, int shippingFee, int totalPayAmount,
-                               String receiverName, String receiverPhone,
-                               String zipCode, String address1, String address2, String shippingMessage) {
+            int totalProductAmount, int shippingFee, int totalPayAmount,
+            String receiverName, String receiverPhone,
+            String zipCode, String address1, String address2, String shippingMessage) {
         return Order.builder()
                 .orderNo(orderNo)
                 .market(market)
@@ -159,6 +158,15 @@ public class Order extends BaseEntity {
         this.orderStatus = "CANCELED";
         this.canceledAt = LocalDateTime.now();
         this.cancelReason = reason;
+    }
+
+    /**
+     * 주문 금액 업데이트
+     */
+    public void updateAmounts(int totalProductAmount, int shippingFee) {
+        this.totalProductAmount = totalProductAmount;
+        this.shippingFee = shippingFee;
+        this.totalPayAmount = totalProductAmount + shippingFee;
     }
 
     /**

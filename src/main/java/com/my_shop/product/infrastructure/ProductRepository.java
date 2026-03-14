@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
+    java.util.Optional<Product> findById(Long seq);
 
     /**
      * Market으로 상품 목록 조회 (동적 검색 조건, 페이징)
