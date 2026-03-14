@@ -5,7 +5,9 @@ import com.my_shop.market.infrastructure.MarketRepository;
 import com.my_shop.product.domain.entity.Category;
 import com.my_shop.product.domain.entity.Product;
 import com.my_shop.product.domain.entity.ProductImage;
+import com.my_shop.product.domain.entity.ProductOption;
 import com.my_shop.product.infrastructure.CategoryRepository;
+import com.my_shop.product.infrastructure.ProductOptionRepository;
 import com.my_shop.product.infrastructure.ProductImageRepository;
 import com.my_shop.product.infrastructure.ProductRepository;
 import com.my_shop.seller.interfaces.dto.ProductCreateRequest;
@@ -28,6 +30,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
     private final MarketRepository marketRepository;
+    private final ProductOptionRepository productOptionRepository;
 
     /**
      * 상품 등록 (SELLER 전용)
@@ -35,9 +38,7 @@ public class ProductService {
     @Transactional
     public ProductResponse createProduct(ProductCreateRequest request, Long sellerSeq) {
         // 1. SELLER의 Market 조회
-        Market market = marketRepository.findAll().stream()
-                .filter(m -> m.getOwner().getSeq().equals(sellerSeq))
-                .findFirst()
+        Market market = marketRepository.findByOwnerSeq(sellerSeq)
                 .orElseThrow(() -> new RuntimeException("판매자의 마켓 정보가 없습니다."));
 
         // 2. Category 조회
@@ -55,12 +56,23 @@ public class ProductService {
                 null // 썸네일은 별도로 이미지 업로드 API에서 처리
         );
 
-        if (request.getMinOrderQty() != null && request.getMinOrderQty() > 0) {
-            // minOrderQty를 설정하려면 별도 setter 필요하거나 Builder 사용
-            // 현재는 기본값 1이 설정됨
-        }
-
         Product savedProduct = productRepository.save(product);
+
+        // 4. 옵션 저장
+        if (request.getOptions() != null && !request.getOptions().isEmpty()) {
+            int sortOrder = 0;
+            for (ProductCreateRequest.OptionRequest optionReq : request.getOptions()) {
+                ProductOption option = ProductOption.create(
+                        savedProduct,
+                        optionReq.getOptionGroup(),
+                        optionReq.getOptionValue(),
+                        optionReq.getAdditionalPrice() != null ? optionReq.getAdditionalPrice() : 0,
+                        optionReq.getStockQty() != null ? optionReq.getStockQty() : 0,
+                        sortOrder++
+                );
+                productOptionRepository.save(option);
+            }
+        }
 
         return ProductResponse.of(savedProduct, List.of());
     }
@@ -143,9 +155,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductResponse> getMyProducts(Long sellerSeq, Pageable pageable, ProductSearchRequest condition) {
         // SELLER의 Market 조회
-        Market market = marketRepository.findAll().stream()
-                .filter(m -> m.getOwner().getSeq().equals(sellerSeq))
-                .findFirst()
+        Market market = marketRepository.findByOwnerSeq(sellerSeq)
                 .orElseThrow(() -> new RuntimeException("판매자의 마켓 정보가 없습니다."));
 
         // 검색 조건 파싱
