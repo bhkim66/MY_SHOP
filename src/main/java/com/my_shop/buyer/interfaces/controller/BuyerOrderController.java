@@ -70,4 +70,15 @@ public class BuyerOrderController {
         buyerOrderService.cancelOrder(orderSeq, buyerSeq, reason);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * 배송 정보 조회
+     */
+    @GetMapping("/{orderSeq}/shipment")
+    public ResponseEntity<ShipmentResponse> getShipment(
+            @PathVariable("orderSeq") Long orderSeq,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long buyerSeq = Long.parseLong(userDetails.getUsername());
+        return ResponseEntity.ok(buyerOrderService.getShipment(orderSeq, buyerSeq));
+    }
 }

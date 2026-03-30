@@ -1,5 +1,6 @@
 package com.my_shop.buyer.interfaces.dto;
 
+import com.my_shop.delivery.domain.entity.Shipment;
 import com.my_shop.order.domain.entity.Order;
 import com.my_shop.order.domain.entity.OrderItem;
 import lombok.AllArgsConstructor;
@@ -53,7 +54,10 @@ public class OrderDetailResponse {
     // 주문 상품 목록
     private List<OrderItemDto> items;
 
-    public static OrderDetailResponse of(Order order, List<OrderItem> orderItems) {
+    // 배송 정보 (null이면 배송 정보 없음)
+    private ShipmentInfo shipmentInfo;
+
+    public static OrderDetailResponse of(Order order, List<OrderItem> orderItems, Shipment shipment) {
         return OrderDetailResponse.builder()
                 .orderSeq(order.getSeq())
                 .orderNo(order.getOrderNo())
@@ -80,7 +84,26 @@ public class OrderDetailResponse {
                 .items(orderItems.stream()
                         .map(OrderItemDto::from)
                         .collect(Collectors.toList()))
+                .shipmentInfo(shipment != null ? ShipmentInfo.builder()
+                        .shippingCompany(shipment.getShippingCompany())
+                        .trackingNumber(shipment.getTrackingNumber())
+                        .shippingStatus(shipment.getShippingStatus())
+                        .shippedAt(shipment.getShippedAt())
+                        .deliveredAt(shipment.getDeliveredAt())
+                        .build() : null)
                 .build();
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ShipmentInfo {
+        private String shippingCompany;
+        private String trackingNumber;
+        private String shippingStatus;   // PREPARING / SHIPPING / DELIVERED
+        private LocalDateTime shippedAt;
+        private LocalDateTime deliveredAt;
     }
 
     @Getter
