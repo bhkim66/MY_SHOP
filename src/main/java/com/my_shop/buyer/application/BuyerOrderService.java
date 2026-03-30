@@ -1,7 +1,12 @@
 package com.my_shop.buyer.application;
 
 import com.my_shop.buyer.interfaces.dto.*;
+import com.my_shop.common.exception.ErrorCode;
+import com.my_shop.common.exception.custom.AccessDeniedException;
+import com.my_shop.common.exception.custom.EntityNotFoundException;
 import com.my_shop.common.utils.OrderNumberGenerator;
+import com.my_shop.delivery.domain.entity.Shipment;
+import com.my_shop.delivery.infrastructure.ShipmentRepository;
 import com.my_shop.member.domain.entity.User;
 import com.my_shop.member.infrastructure.UserRepository;
 import com.my_shop.order.domain.entity.Order;
@@ -30,6 +35,7 @@ public class BuyerOrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final OrderNumberGenerator orderNumberGenerator;
+    private final ShipmentRepository shipmentRepository;
 
     private static final int SHIPPING_FEE = 3000; // 기본 배송비
 
@@ -162,7 +168,8 @@ public class BuyerOrderService {
         }
 
         List<OrderItem> orderItems = orderItemRepository.findByOrderSeq(orderSeq);
-        return OrderDetailResponse.of(order, orderItems);
+        Shipment shipment = shipmentRepository.findByOrderSeq(orderSeq).orElse(null);
+        return OrderDetailResponse.of(order, orderItems, shipment);
     }
 
     /**
@@ -187,5 +194,23 @@ public class BuyerOrderService {
             Product product = item.getProduct();
             product.increaseStock(item.getQty());
         }
+    }
+
+    /**
+     * 배송 정보 조회 (구매자)
+     */
+    @Transactional(readOnly = true)
+    public ShipmentResponse getShipment(Long orderSeq, Long buyerSeq) {
+        Order order = orderRepository.findById(orderSeq)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (!order.getBuyer().getSeq().equals(buyerSeq)) {
+            throw new AccessDeniedException(ErrorCode.ORDER_ACCESS_DENIED);
+        }
+
+        Shipment shipment = shipmentRepository.findByOrderSeq(orderSeq)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SHIPMENT_NOT_FOUND));
+
+        return ShipmentResponse.from(shipment);
     }
 }

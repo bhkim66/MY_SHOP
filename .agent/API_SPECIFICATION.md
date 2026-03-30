@@ -14,6 +14,8 @@ MY_SHOP 프로젝트의 모든 REST API 엔드포인트를 문서화합니다.
 - [상품 관리 API (SELLER)](#상품-관리-api-seller)
 - [대시보드 API (SELLER)](#대시보드-api-seller)
 - [주문 관리 API (SELLER)](#주문-관리-api-seller)
+- [장바구니 API (BUYER)](#장바구니-api-buyer)
+- [배송 API (BUYER)](#배송-api-buyer)
 
 ---
 
@@ -247,7 +249,7 @@ GET /v1/products?page=0&size=12&sort=createdAt,desc
 | seq | Long | 상품 ID |
 | productName | String | 상품명 |
 | price | Integer | 정가 (원) |
-| salePrice | Integer | 판매가 (원) |
+| salePrice | Integer\|null | 판매가 (원). 할인가 없으면 null |
 | thumbnailUrl | String | 썸네일 이미지 URL |
 | marketName | String | 마켓명 |
 | categoryName | String | 카테고리명 |
@@ -303,7 +305,7 @@ GET /v1/products/{seq}
 | productName | String | 상품명 |
 | description | String | 상품 설명 |
 | price | Integer | 정가 (원) |
-| salePrice | Integer | 판매가 (원) |
+| salePrice | Integer\|null | 판매가 (원). 할인가 없으면 null |
 | stockQty | Integer | 재고 수량 |
 | minOrderQty | Integer | 최소 주문 수량 |
 | maxOrderQty | Integer | 최대 주문 수량 |
@@ -482,6 +484,13 @@ Authorization: Bearer {access_token}
   "confirmedAt": null,
   "canceledAt": null,
   "cancelReason": null,
+  "shipmentInfo": {
+    "shippingCompany": "CJ대한통운",
+    "trackingNumber": "1234567890",
+    "shippingStatus": "SHIPPING",
+    "shippedAt": "2026-03-29T10:00:00",
+    "deliveredAt": null
+  },
   "items": [
     {
       "seq": 1,
@@ -524,6 +533,12 @@ Authorization: Bearer {access_token}
 | confirmedAt | LocalDateTime | 주문 확정 일시 |
 | canceledAt | LocalDateTime | 주문 취소 일시 |
 | cancelReason | String | 취소 사유 |
+| shipmentInfo | Object | 배송 정보 (배송 정보 없으면 null) |
+| shipmentInfo.shippingCompany | String | 택배사명 |
+| shipmentInfo.trackingNumber | String | 운송장 번호 |
+| shipmentInfo.shippingStatus | String | 배송 상태 (PREPARING \| SHIPPING \| DELIVERED) |
+| shipmentInfo.shippedAt | LocalDateTime | 발송 일시 |
+| shipmentInfo.deliveredAt | LocalDateTime | 배송 완료 일시 |
 | items | List | 주문 상품 목록 |
 | items[].seq | Long | 주문 상품 항목 ID |
 | items[].productSeq | Long | 상품 ID |
@@ -1344,6 +1359,59 @@ Content-Type: application/json
 
 ---
 
+## 배송 API (BUYER)
+
+> 인증 필요: `Authorization: Bearer {access_token}`
+
+---
+
+### 1. 배송 정보 조회
+
+```http
+GET /v1/orders/{orderSeq}/shipment
+Authorization: Bearer {access_token}
+```
+
+**Path Parameters**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| orderSeq | Long | O | 주문 ID |
+
+**Response (200 OK)**:
+```json
+{
+  "shippingCompany": "CJ대한통운",
+  "trackingNumber": "1234567890",
+  "shippingStatus": "SHIPPING",
+  "shippedAt": "2026-03-29T10:00:00",
+  "deliveredAt": null
+}
+```
+
+**Response 필드**:
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| shippingCompany | String | 택배사명 |
+| trackingNumber | String | 운송장 번호 |
+| shippingStatus | String | 배송 상태 (PREPARING \| SHIPPING \| DELIVERED) |
+| shippedAt | LocalDateTime | 발송 일시 |
+| deliveredAt | LocalDateTime | 배송 완료 일시 (미도착 시 null) |
+
+**에러 케이스**:
+| 상황 | 상태 코드 | 메시지 |
+|------|-----------|--------|
+| 본인 주문이 아님 | 403 | 해당 주문에 대한 권한이 없습니다 |
+| 주문 또는 배송 정보 없음 | 404 | 주문 또는 배송 정보를 찾을 수 없습니다 |
+
+---
+
+> [!NOTE]
+> 주문 상세 조회(`GET /v1/orders/{orderSeq}`) 응답에도 `shipmentInfo` 필드로 배송 정보가 포함됩니다.
+> `shipmentInfo`는 배송 정보가 없으면 `null`을 반환합니다.
+
+
+---
+
 ## 에러 코드
 
 ### HTTP 상태 코드
@@ -1408,3 +1476,189 @@ Content-Type: application/json
 
 > [!NOTE]
 > 상품 등록 시 `categoryCode` 필드에는 **2depth 코드**를 사용합니다.
+
+---
+
+## 장바구니 API (BUYER)
+
+> 인증 필요: `Authorization: Bearer {access_token}`
+> 권한: 로그인한 모든 사용자
+
+---
+
+### 1. 장바구니 담기
+
+```http
+POST /v1/cart
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "productSeq": 1,
+  "productOptionSeq": null,
+  "qty": 2
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| productSeq | Long | O | 상품 ID |
+| productOptionSeq | Long | X | 상품 옵션 ID (옵션 있는 상품) |
+| qty | int | O | 수량 (최소 1) |
+
+**Response (200 OK)**: `CartResponse` (공통 응답 DTO 참고)
+
+**비즈니스 규칙**:
+- 동일 상품+옵션이 이미 담겨있으면 수량 합산
+- 재고 초과 불가
+- 판매 중지(`ON_SALE` 아닌) 상품 담기 불가
+
+---
+
+### 2. 장바구니 조회
+
+```http
+GET /v1/cart
+Authorization: Bearer {access_token}
+```
+
+**Response (200 OK)**: `CartResponse` (공통 응답 DTO 참고)
+
+---
+
+### 3. 장바구니 개수 조회 (헤더 뱃지용)
+
+```http
+GET /v1/cart/count
+Authorization: Bearer {access_token}
+```
+
+**Response (200 OK)**:
+```json
+{
+  "count": 3
+}
+```
+
+---
+
+### 4. 수량 변경
+
+```http
+PATCH /v1/cart/{cartSeq}
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+**Path Parameter**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| cartSeq | Long | O | 장바구니 항목 ID |
+
+**Request Body**:
+```json
+{
+  "qty": 3
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| qty | int | O | 변경할 수량 (최소 1) |
+
+**Response (200 OK)**: `CartResponse` (공통 응답 DTO 참고)
+
+**에러 케이스**:
+| 상황 | 상태 코드 | 메시지 |
+|------|-----------|--------|
+| 본인 장바구니 항목이 아님 | 403 | 해당 장바구니 항목에 대한 권한이 없습니다 |
+| 장바구니 항목 없음 | 404 | 장바구니 항목을 찾을 수 없습니다 |
+| 재고 초과 | 400 | 재고 수량을 초과할 수 없습니다 |
+
+---
+
+### 5. 장바구니 항목 삭제
+
+```http
+DELETE /v1/cart/{cartSeq}
+Authorization: Bearer {access_token}
+```
+
+**Path Parameter**:
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| cartSeq | Long | O | 장바구니 항목 ID |
+
+**Response (204 No Content)**
+
+**에러 케이스**:
+| 상황 | 상태 코드 | 메시지 |
+|------|-----------|--------|
+| 본인 장바구니 항목이 아님 | 403 | 해당 장바구니 항목에 대한 권한이 없습니다 |
+| 장바구니 항목 없음 | 404 | 장바구니 항목을 찾을 수 없습니다 |
+
+---
+
+### 6. 장바구니 전체 비우기
+
+```http
+DELETE /v1/cart
+Authorization: Bearer {access_token}
+```
+
+**Response (204 No Content)**
+
+---
+
+### 공통 응답 DTO
+
+**CartItemResponse**:
+```json
+{
+  "cartSeq": 1,
+  "productSeq": 10,
+  "productName": "기본 티셔츠",
+  "thumbnailUrl": "https://...",
+  "productOptionSeq": 5,
+  "optionName": "색상: 빨강 / 사이즈: L",
+  "price": 29000,
+  "qty": 2,
+  "stockQty": 15,
+  "totalPrice": 58000
+}
+```
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| cartSeq | Long | 장바구니 항목 ID |
+| productSeq | Long | 상품 ID |
+| productName | String | 상품명 |
+| thumbnailUrl | String | 상품 썸네일 이미지 URL |
+| productOptionSeq | Long | 상품 옵션 ID (nullable) |
+| optionName | String | 옵션 조합명 (nullable, 예: "색상: 빨강 / 사이즈: L") |
+| price | int | 단가 |
+| qty | int | 수량 |
+| stockQty | int | 현재 재고 수량 |
+| totalPrice | int | 항목 합계 금액 (price × qty) |
+
+**CartResponse**:
+```json
+{
+  "items": [],
+  "totalProductAmount": 58000,
+  "shippingFee": 3000,
+  "totalPayAmount": 61000,
+  "itemCount": 2
+}
+```
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| items | List\<CartItemResponse\> | 장바구니 항목 목록 |
+| totalProductAmount | int | 상품 금액 합계 |
+| shippingFee | int | 배송비 |
+| totalPayAmount | int | 최종 결제 예정 금액 (상품 금액 + 배송비) |
+| itemCount | int | 장바구니 내 총 항목 수 |

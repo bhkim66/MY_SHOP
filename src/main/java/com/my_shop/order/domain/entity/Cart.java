@@ -40,4 +40,30 @@ public class Cart extends BaseTimeEntity {
 
     @Column(name = "qty", nullable = false)
     private int qty;
+
+    /**
+     * 장바구니 항목 생성 정적 팩토리 메서드
+     */
+    public static Cart create(User user, Product product, ProductOption productOption, int qty) {
+        Cart cart = new Cart();
+        cart.user = user;
+        cart.product = product;
+        cart.productOption = productOption;
+        cart.qty = qty;
+        return cart;
+    }
+
+    /**
+     * 수량 변경
+     */
+    public void updateQty(int qty) {
+        this.qty = qty;
+    }
+
+    /**
+     * 수량 증가
+     */
+    public void addQty(int qty) {
+        this.qty += qty;
+    }
 }
