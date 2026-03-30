@@ -325,11 +325,12 @@
 ### 🧪 BL-T01 테스트 코드 보강
 **우선순위**: 높음
 
-- [ ] `BuyerOrderServiceTest` — 주문 생성, 취소, 권한 검증
-- [ ] `PaymentServiceTest` — 결제 요청, 확인, 금액 검증
+- [x] `BuyerOrderServiceTest` — 주문 생성, 취소, 권한 검증
+- [x] `PaymentServiceTest` — 결제 요청, 확인, 금액 검증
 - [ ] `ProductServiceTest` — 상품 등록, 재고 차감, 유효성
-- [ ] `DashboardServiceTest` — 통계 집계 로직
-- [ ] `BuyerOrderControllerTest` — MockMvc 웹 계층 테스트
+- [x] `DashboardServiceTest` — 통계 집계 로직
+- [x] `CartServiceTest` — 장바구니 담기, 수량 변경, 삭제, 개수 조회
+- [x] `BuyerOrderControllerTest` — MockMvc 웹 계층 테스트
 - [ ] `PaymentControllerTest`
 - [ ] `SellerProductManagementControllerTest`
 
